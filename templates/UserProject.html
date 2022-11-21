@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+{% block title %}已上傳的專題檔案{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <table class="table">
+            <thead>
+                <th>專題名稱</th>
+                <th>指導教授</th>
+                <th>檔案</th>
+                <th></th>
+            </thead>
+            <tbody>
+                {% for project in project %}
+                <tr>
+                    <td>{{ project.project_name }}</td>
+                    <td>{{ project.project_professor }}</td>
+                    <td>{{ project.project_report }}</td>
+                    <td><a href="{% url 'EditProject' pk=project.id%}" class="btn btn-primary">編輯</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

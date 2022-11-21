@@ -1,0 +1,58 @@
+<!DOCTYPE>
+<html lan = "en" dir = "ltr">
+    <head>
+        <meta charset = "utf-8">
+         <!-- Bootstrap CSS -->
+         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.rtl.min.css" integrity="sha384-dc2NSrAXbAkjrdm9IYrX10fQq9SDG6Vjz7nQVKdKcJl3pC+k37e7qJR5MVSCS+wR" crossorigin="anonymous">
+        <title>資科系專題繳交&證照登錄</title>
+    </head>
+    <body>
+        <div class="container">
+            <header class="d-flex flex-wrap align-items-center justify-content-center justify-content-md-between py-3 mb-4 border-bottom">
+                <a href="/" class="d-flex align-items-center col-md-3 mb-2 mb-md-0 text-dark text-decoration-none">
+                    <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"></use></svg>
+                </a>
+        
+            <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+                <li><a href="{% url 'Home' %}" class="nav-link px-2 link-secondary">首頁</a></li>
+                {% if user and user.is_authenticated %}
+                    {% if user.identity == 0 %}
+                        
+                        <li><a href="{% url 'PassProject' pk=user.id %}" class="nav-link px-2 link-dark">專題繳交</a></li>
+                        <li><a href="{% url 'PassLicense' pk=user.id %}" class="nav-link px-2 link-dark">證照登錄</a></li>
+                        <li><a href="{% url 'UserProject' pk=user.id %}" class="nav-link px-2 link-dark">我的專題</a></li>
+                        <li><a href="{% url 'UserLicense' pk=user.id %}" class="nav-link px-2 link-dark">我的證照</a></li>
+                        
+                    {% elif user.identity == 1 %}
+                        <li><a href="{% url 'CheckLicense' %}" class="nav-link px-2 link-dark">待審核</a></li>    
+                        <li><a href="{% url 'DisplayLicense' %}" class="nav-link px-2 link-dark">證照總覽</a></li>
+                        <li><a href="{% url 'DisplayProject' %}" class="nav-link px-2 link-dark">專題總覽</a></li>
+                        <li><a href="{% url 'ImportAndExport' %}" class="nav-link px-2 link-dark">新增學生</a>
+                    {% else %}
+                        <li><a href="{% url 'PassProposal' pk=user.id %}" class="nav-link px-2 link-dark">論文計畫繳交</a></li>
+                        <li><a href="{% url 'PassProposal' pk=user.id %}" class="nav-link px-2 link-dark">論文繳交</a></li>
+                    {% endif %}
+                {% endif %}
+            </ul>
+            {% if user.is_authenticated %}
+                <div class="col-md-3 text-end">
+                    <form method = "post" action = "{% url 'login' %}">{% csrf_token %}
+                        {{ user.name}}
+                        <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">Logout</a>
+                    </form>
+                </div>
+            {% else %}
+                <div class="col-md-3 text-end">
+                    <a href="{% url 'login' %}" class="btn btn-outline-primary me-2">Login</a>
+                </div>
+            {% endif %}
+            </header>
+        </div>
+        <div class="container">
+            <h1>{% block title %}{% endblock %}</h1>
+        </div>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </body>
+</html>

@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+{% block title %}{% endblock %}
+
+{% block content %}
+
+<form method = 'GET'>
+    姓名:<input type = "search" name = "q" placeholder = "">
+    級別:<input type = "search" name = "graduateLevel" placeholder = "">
+    指導教授:<input type = "search" name = "professor" placeholder = "">
+    <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
+</form>
+<form method = 'POST'>
+    {% csrf_token %}
+    姓名:<input type = "search" name = "q" placeholder = "">
+    級別:<input type = "search" name = "graduateLevel" placeholder = ""> 
+    指導教授:<input type = "search" name = "professor" placeholder = "">
+    <input type="submit" class="btn btn-primary" name = "export" value="匯出" />
+</form>
+    <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">姓名</th>
+                    <th scope="col">學號</th>
+                    <th scope="col">指導教授</th>
+                    <th scope="col">畢業級</th>
+                    <th scope="col">專題名稱</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for project in project %}
+                    <tr>
+                        <td>{{ project.project_username }}</td>
+                        <td>{{ project.project_owner.username }}</td>
+                        <td>{{ project.project_professor }}</td>
+                        <td>{{ project.project_graduateLevel }}</td>
+                        <td><a href="{{ project.project_report.url }}" target="_blank">{{ project.project_name }}</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

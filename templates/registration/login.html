@@ -1,0 +1,25 @@
+{% extends "layout.html" %}
+
+{% block title %}
+Login
+{% endblock %}
+{% block content %}
+<div class="container">
+    <form action="{% url 'login' %}" method="POST">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">使用者名稱：</div>
+            <div class="col-4 themed-grid-col">
+                <input class="form-control" type="text" name="username" id="username">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">密碼：</div>
+            <div class="col-4 themed-grid-col">
+                <input class="form-control" type="password" name="password" id="password">
+            </div>
+        </div>
+        <input class="btn btn-outline-primary" type="submit" value="登入">
+    </form>
+</div>
+{% endblock %}
