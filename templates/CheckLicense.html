@@ -18,11 +18,11 @@
             <tbody>
                 {% for license in license %}
                     <tr>
-                        <td>{{ license.license_username }}</td>
-                        <td>{{ license.license_owner.username }}</td>
-                        <td>{{ license.license_level }}</td>
-                        <td>{{ license.license_name }}</td>
-                        <td>{{ license.get_license_pass_display }}</td>
+                        <td>{{ license.username }}</td>
+                        <td>{{ license.owner.username }}</td>
+                        <td>{{ license.level }}</td>
+                        <td>{{ license.name }}</td>
+                        <td>{{ license.get_pass_display }}</td>
                         <td><a href="{% url 'AuditLicense' pk=license.id %}"class="btn btn-primary">檢視</a></td>
                     </tr>
                 {% endfor %}

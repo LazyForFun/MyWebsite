@@ -3,17 +3,12 @@
 
 {% block content %}
 
-<form method = 'GET'>
-    姓名:<input type = "search" name = "q" placeholder = "">
-    級別:<input type = "search" name = "graduateLevel" placeholder = "">
-    指導教授:<input type = "search" name = "professor" placeholder = "">
-    <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
-</form>
 <form method = 'POST'>
     {% csrf_token %}
     姓名:<input type = "search" name = "q" placeholder = "">
     級別:<input type = "search" name = "graduateLevel" placeholder = ""> 
     指導教授:<input type = "search" name = "professor" placeholder = "">
+    <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
     <input type="submit" class="btn btn-primary" name = "export" value="匯出" />
 </form>
     <div class="container">
@@ -30,11 +25,11 @@
             <tbody>
                 {% for project in project %}
                     <tr>
-                        <td>{{ project.project_username }}</td>
-                        <td>{{ project.project_owner.username }}</td>
-                        <td>{{ project.project_professor }}</td>
-                        <td>{{ project.project_graduateLevel }}</td>
-                        <td><a href="{{ project.project_report.url }}" target="_blank">{{ project.project_name }}</a></td>
+                        <td>{{ project.username }}</td>
+                        <td>{{ project.owner.username }}</td>
+                        <td>{{ project.professor }}</td>
+                        <td>{{ project.graduateLevel }}</td>
+                        <td><a href="{{ project.report.url }}" target="_blank">{{ project.name }}</a></td>
                     </tr>
                 {% endfor %}
             </tbody>

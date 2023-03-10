@@ -2,37 +2,21 @@
 {% block title %}{% endblock %}
 
 {% block content %}
-<form method = 'GET'>
-    姓名:<input type = "search" name = "q" placeholder = "">
-    級別:
-    <select class = "select" name = "level">
-        <option value = ''></option>
-        <option value = 'A'>A</option>
-        <option value = 'B'>B</option>
-    </select> 
-    審核:
-    <select class = "select" name = "pass">
-        <option></option>
-        <option value = 1>通過</option>
-        <option value = 2>未通過</option>
-    </select>
-    <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
-</form>
-<form method = 'POST'>
+
+<form method = "POST">
     {% csrf_token %}
     姓名:<input type = "search" name = "q" placeholder = "">
     級別:
     <select class = "select" name = "level">
-        <option value = ''></option>
-        <option value = 'A'>A</option>
-        <option value = 'B'>B</option>
+        <option value = 'A' {% if level == 'A' %} selected="selected" {% endif %}>A</option>
+        <option value = 'B' {% if level == 'B' %} selected="selected" {% endif %}>B</option>
     </select> 
     審核:
-    <select class = "select" name = "pass">
-        <option></option>
-        <option value = 1>通過</option>
-        <option value = 2>未通過</option>
+    <select class = "select" name = "pazz">
+        <option value = 1 {% if pazz == 1 %}selected{% endif %}>通過</option>
+        <option value = 2 {% if pazz == 2 %}selected{% endif %}>未通過</option>
     </select>
+    <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
     <input type="submit" class="btn btn-primary" name = "export" value="匯出" />
 </form>
     <div class="container">
@@ -49,16 +33,14 @@
             </thead>
             <tbody>
                 {% for license in license %}
-                    {% if license.license_pass != 0 %}
-                        <tr>
-                            <td>{{ license.license_username }}</td>
-                            <td>{{ license.license_owner.username }}</td>
-                            <td>{{ license.license_level }}</td>
-                            <td>{{ license.license_name }}</td>
-                            <td>{{ license.get_license_pass_display }}</td>
-                            <td><a href="{% url 'AuditLicense' pk=license.id %}"class="btn btn-primary">檢視</a></td>
-                        </tr>
-                    {% endif %}
+                    <tr>
+                        <td>{{ license.username }}</td>
+                        <td>{{ license.owner.username }}</td>
+                        <td>{{ license.level }}</td>
+                        <td>{{ license.name }}</td>
+                        <td>{{ license.get_pazz_display }}</td>
+                        <td><a href="{% url 'AuditLicense' pk=license.id %}"class="btn btn-primary">檢視</a></td>
+                    </tr>
                 {% endfor %}
             </tbody>
         </table>

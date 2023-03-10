@@ -6,11 +6,11 @@
     {% csrf_token %}
     <div class="container">
         <font Size="10">
-            姓名:{{ license.license_username }}<br>
-            證照名稱:{{ license.license_name }}<br>
-            取得日期:{{ license.license_acqDate }}<br>
-            證照級別:{{ license.get_license_level_display }}<br>
-            審核:{{ license.get_license_pass_display }}<br>
+            姓名:{{ license.username }}<br>
+            證照名稱:{{ license.name }}<br>
+            取得日期:{{ license.acqDate }}<br>
+            證照級別:{{ license.get_level_display }}<br>
+            審核:{{ license.get_pazz_display }}<br>
         </font>
     <input type="submit" class = "btn btn-danger" value="刪除"><br>
     </div>

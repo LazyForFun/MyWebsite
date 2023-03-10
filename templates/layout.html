@@ -17,9 +17,10 @@
                 <li><a href="{% url 'Home' %}" class="nav-link px-2 link-secondary">首頁</a></li>
                 {% if user and user.is_authenticated %}
                     {% if user.identity == 0 %}
-                        
-                        <li><a href="{% url 'PassProject' pk=user.id %}" class="nav-link px-2 link-dark">專題繳交</a></li>
-                        <li><a href="{% url 'PassLicense' pk=user.id %}" class="nav-link px-2 link-dark">證照登錄</a></li>
+                        {% if user.not_graduated %}
+                            <li><a href="{% url 'PassProject' pk=user.id %}" class="nav-link px-2 link-dark">專題繳交</a></li>
+                            <li><a href="{% url 'PassLicense' pk=user.id %}" class="nav-link px-2 link-dark">證照登錄</a></li>
+                        {% endif %}
                         <li><a href="{% url 'UserProject' pk=user.id %}" class="nav-link px-2 link-dark">我的專題</a></li>
                         <li><a href="{% url 'UserLicense' pk=user.id %}" class="nav-link px-2 link-dark">我的證照</a></li>
                         
@@ -28,16 +29,20 @@
                         <li><a href="{% url 'DisplayLicense' %}" class="nav-link px-2 link-dark">證照總覽</a></li>
                         <li><a href="{% url 'DisplayProject' %}" class="nav-link px-2 link-dark">專題總覽</a></li>
                         <li><a href="{% url 'ImportAndExport' %}" class="nav-link px-2 link-dark">新增學生</a>
+                        <li><a href="{% url 'SearchStudent' %}" class="nav-link px-2 link-dark">修改學生資料</a></li>
+                        <li><a href="{% url 'BookingList' %}" class="nav-link px-2 link-dark">借閱申請</a></li>
                     {% else %}
                         <li><a href="{% url 'PassProposal' pk=user.id %}" class="nav-link px-2 link-dark">論文計畫繳交</a></li>
                         <li><a href="{% url 'PassProposal' pk=user.id %}" class="nav-link px-2 link-dark">論文繳交</a></li>
                     {% endif %}
+                {% else %}
+                    <li><a href="{% url 'BorrowPaper' %}" class="nav-link px-2 link-dark">專題報告書列表</a></li>
                 {% endif %}
             </ul>
             {% if user.is_authenticated %}
                 <div class="col-md-3 text-end">
                     <form method = "post" action = "{% url 'login' %}">{% csrf_token %}
-                        {{ user.name}}
+                        {{ user.name }}
                         <a href="{% url 'logout' %}" class="btn btn-outline-primary me-2">Logout</a>
                     </form>
                 </div>

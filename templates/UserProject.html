@@ -13,9 +13,9 @@
             <tbody>
                 {% for project in project %}
                 <tr>
-                    <td>{{ project.project_name }}</td>
-                    <td>{{ project.project_professor }}</td>
-                    <td>{{ project.project_report }}</td>
+                    <td>{{ project.name }}</td>
+                    <td>{{ project.professor }}</td>
+                    <td>{{ project.report }}</td>
                     <td><a href="{% url 'EditProject' pk=project.id%}" class="btn btn-primary">編輯</a></td>
                 </tr>
                 {% endfor %}

@@ -14,14 +14,14 @@
             <tbody>
                 {% for license in license %}
                 <tr>
-                    <td>{{ license.license_name }}</td>
-                    <td>{{ license.license_level }}</td>
-                    <td>{{ license.license_acqDate }}</td>
-                    <td>{{ license.get_license_pass_display }}</td>
+                    <td>{{ license.name }}</td>
+                    <td>{{ license.level }}</td>
+                    <td>{{ license.acqDate }}</td>
+                    <td>{{ license.get_pazz_display }}</td>
                     <td>
-                        {% if license.license_pass == 0 %}
+                        {% if license.pazz == 0 %}
                             <a href="{% url 'EditLicense' pk=license.id %}" class="btn btn-primary">編輯</a>
-                        {% elif license.license_pass == 2 %}
+                        {% elif license.pazz == 2 %}
                             <a href="{% url 'DeleteLicense' pk=license.id %}" class="btn btn-danger">刪除</a>
                         {% endif %}
                     </td>
