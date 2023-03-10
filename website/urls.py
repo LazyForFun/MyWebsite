@@ -23,6 +23,6 @@ from django.conf import settings
 urlpatterns = [
     path('', include('student.urls')),
     path('admin/', admin.site.urls),
-    path('accounts/', include('django.contrib.auth.urls')),
+    path('license-pass/accounts/', include('django.contrib.auth.urls')),
     path('', TemplateView.as_view(template_name='Home.html'))
 ]+static(settings.MEDIA_URL,document_root=settings.MEDIA_ROOT)
