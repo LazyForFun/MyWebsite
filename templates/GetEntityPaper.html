@@ -1,0 +1,21 @@
+{% extends 'layout.html' %}
+
+{% block title %}領取報告書{% endblock %}
+
+{% block content %}
+    <div class="container"><br>
+        <form method="POST" action="">
+            {% csrf_token %}
+            <h6>掃描報告書條碼:<h6><input type="text" name="barCode" class="form-control"><h6></br>
+            <input type="submit" class="btn btn-primary" value="領取"></input><br><hr>
+        </form>
+    </div>
+
+    <div class="container">
+        已借閱的書籍：<br>
+        {% for booking in booking %}
+            {{ booking.paper.name }}<br>
+        {% endfor %}
+    </div>
+
+{% endblock %}

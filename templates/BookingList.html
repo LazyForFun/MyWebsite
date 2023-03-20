@@ -9,24 +9,28 @@
                 <tr>
                     <th scope="col">借閱人姓名</th>
                     <th scope="col">名稱</th>
-                    <th scope="col">       </th>
+                    <th scope="col">條碼</th>
                     <th scope="col">作者</th>
                     <th scope="col">指導教授</th>
                     <th scope="col">類型</th>
+                    <th scope="col">預約時間</th>
+                    <th scope="col">借用時間</th>
                     <th scope="col">動作</th>
                 </tr>
             </thead>
             <tbody>
                 {% for booking in booking %}
                     <tr>
-                        <td>{{ booking.username }}</td>
-                        <td>{{ booking.paperName }}</td>
-                        <td></td>
-                        <td>{{ booking.author }}</td>
-                        <td>{{ booking.professor }}</td>
-                        <td>{{ booking.get_type_display }}</td>
+                        <td>{{ booking.user.name }}</td>
+                        <td>{{ booking.paper.name }}</td>
+                        <td>{{ booking.paper.barCode }}</td>
+                        <td>{{ booking.paper.author }}</td>
+                        <td>{{ booking.paper.professor }}</td>
+                        <td>{{ booking.paper.get_type_display }}</td>
+                        <td>{{ booking.bookingDate }}     {{ booking.bookingTime }}</td>
+                        <td>{{ booking.takingTime }}</td>
                         {% if booking.state == 0 %}
-                            <td><a href="{% url 'ChangeBookingState' pk=booking.id %}" class="btn btn-primary">已預約</a></td>
+                            <td><button class="btn btn-primary">已預約</button></td>
                         {% else %}
                             <td><a href="{% url 'FinishBooking' pk=booking.id%}" class="btn btn-danger">完成</a></td>
                         {% endif %}
@@ -35,4 +39,13 @@
             </tbody>
         </table>
     </div>
+    <p style="text-align:center">
+        {% for page_number in booking.paginator.page_range %}
+          {% ifequal page_number  booking.number %}
+            <button class="btn btn-outline-primary">{{ page_number }}</button>
+          {% else %}
+            <a href="?page={{ page_number }}" class="btn btn-primary">{{ page_number }}</a>
+          {% endifequal %}
+        {% endfor %}
+    </p>
 {% endblock %}

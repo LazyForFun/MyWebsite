@@ -25,7 +25,7 @@ SECRET_KEY = '$lq(5^u&ovo_@tzq8phg+xbyul%fpis@tyvx2_vr3unvgf6ee&'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -124,9 +124,9 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = 'license-pass/static/'
-STATIC_ROOT = BASE_DIR,"statics"
+STATIC_ROOT = os.path.join(os.path.dirname(__file__),'static')
 
-#STATICFILES_DIRS=[os.path.join(BASE_DIR,"statics")]
+STATICFILES_DIRS=[os.path.join(BASE_DIR,"statics")]
 
 
 LOGIN_REDIRECT_URL = '/'
@@ -136,3 +136,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  #SMTP伺服器
+EMAIL_PORT = 587  #TLS通訊埠號
+EMAIL_USE_TLS = True  #開啟TLS(傳輸層安全性)
+EMAIL_HOST_USER = 'ling900101@gmail.com'  #寄件者電子郵件
+EMAIL_HOST_PASSWORD = 'alytntbqjmmaqxfd'  #Gmail應用程式的密碼

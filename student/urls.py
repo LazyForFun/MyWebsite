@@ -18,37 +18,47 @@ from django.urls import path
 from . import views
 from django.conf import settings
 from django.conf.urls.static import static
-myPath='license-pass'+'/'
+from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.contrib import staticfiles
+
+
 urlpatterns = [
     #首頁標籤
-    path(myPath+'Home', views.Home.as_view(), name='Home'),
-    path(myPath+'BorrowPaper', views.BorrowPaper.as_view(), name='BorrowPaper'),
-    #path(myPath+'BookingCart', views.BookingCart.as_view(), name='BookingCart'),
-    #登入與登出
-    path(myPath+'login', views.LoginView.as_view(), name='login'),
-    path(myPath+'logout', views.LogoutView.as_view(), name='logout'),
+    path('', views.Home.as_view(), name='Home'),
+    #登入、登出、個人資訊
+    path('login', views.LoginView.as_view(), name='login'),
+    path('logout', views.LogoutView.as_view(), name='logout'),
+    path('Signin', views.Signin.as_view(), name='Signin'),#註冊
+    path('EditPassword/<int:pk>', views.EditPassword.as_view(), name='EditPassword'),#編輯密碼
+    path('ForgetPassword', views.ForgetPassword.as_view(), name='ForgetPassword'),
     #系助教端
-    path(myPath+'ImportAndExport', views.ImportAndExport.as_view(), name = 'ImportAndExport'),#匯入匯出
-    path(myPath+'CheckLicense', views.CheckLicense.as_view(), name='CheckLicense'),#證照瀏覽
-    path(myPath+'DisplayLicense', views.DisplayLicense.as_view(), name='DisplayLicense'),#證照瀏覽
-    path(myPath+'DisplayProject', views.DisplayProject.as_view(), name='DisplayProject'),#專題瀏覽
-    path(myPath+'AuditLicense/<int:pk>', views.AuditLicense.as_view(), name='AuditLicense'),#審核
-    path(myPath+'SearchStudent', views.SearchStudent.as_view(), name='SearchStudent'),#尋找特定學生
-    path(myPath+'ModifyStudentInfo/<int:pk>', views.ModifyStudentInfo.as_view(), name='ModifyStudentInfo'),#修改學生資料
-    path(myPath+'BookingProject/<int:pk>', views.BookingProject.as_view(), name='BookingProject'),#借用表單
-    path(myPath+'BookingPaper/<int:pk>', views.BookingPaper.as_view(), name='BookingPaper'),#借用表單
-    path(myPath+'BookingList', views.BookingList.as_view(), name='BookingList'),#借用申請表
-    path(myPath+'ChangeBookingState/<int:pk>', views.BookingList.changeBookingState, name='ChangeBookingState'),
-    path(myPath+'FinishBooking/<int:pk>', views.BookingList.finishBooking, name='FinishBooking'),#刪除已完成的借用
+    path('ImportAndExport', views.ImportAndExport.as_view(), name = 'ImportAndExport'),#匯入匯出
+    #path('CheckLicense', views.CheckLicense.as_view(), name='CheckLicense'),#證照瀏覽
+    path('DisplayLicense', views.DisplayLicense.as_view(), name='DisplayLicense'),#證照瀏覽
+    path('DisplayProject', views.DisplayProject.as_view(), name='DisplayProject'),#專題瀏覽
+    path('AuditLicense/<int:pk>', views.AuditLicense.as_view(), name='AuditLicense'),#審核
+    path('SearchStudent', views.SearchStudent.as_view(), name='SearchStudent'),#尋找特定學生
+    path('ModifyStudentInfo/<int:pk>', views.ModifyStudentInfo.as_view(), name='ModifyStudentInfo'),#修改學生資料
+    path('BookingList', views.BookingList.as_view(), name='BookingList'),#借用申請表
+    path('FinishBooking/<int:pk>', views.BookingList.finishBooking, name='FinishBooking'),#刪除已完成的借用
+    path('HistoryBookingAnalysis', views.HistoryBookingAnalysis.as_view(), name='HistoryBookingAnalysis'),
     #學士端
-    path(myPath+'PassProject/<int:pk>', views.PassProject.as_view(), name='PassProject'), #專題
-    path(myPath+'PassLicense/<int:pk>', views.PassLicense.as_view(), name='PassLicense'), #證照
-    path(myPath+'UserProject/<int:pk>', views.UserProject.as_view(), name='UserProject'),
-    path(myPath+'UserLicense/<int:pk>', views.UserLicense.as_view(), name='UserLicense'),
-    path(myPath+'EditLicense/<int:pk>', views.EditLicense.as_view(), name='EditLicense'),
-    path(myPath+'EditProject/<int:pk>', views.EditProject.as_view(), name='EditProject'),
-    path(myPath+'DeleteLicense/<int:pk>', views.DeleteLicense.as_view(), name='DeleteLicense'),
+    path('PassProject/<int:pk>', views.PassProject.as_view(), name='PassProject'), #專題
+    path('PassLicense/<int:pk>', views.PassLicense.as_view(), name='PassLicense'), #證照
+    path('UserProject/<int:pk>', views.UserProject.as_view(), name='UserProject'),
+    path('UserLicense/<int:pk>', views.UserLicense.as_view(), name='UserLicense'),
+    path('EditLicense/<int:pk>', views.EditLicense.as_view(), name='EditLicense'),
+    path('EditProject/<int:pk>', views.EditProject.as_view(), name='EditProject'),
+    path('DeleteLicense/<int:pk>', views.DeleteLicense.as_view(), name='DeleteLicense'),
     #碩士端
-     path(myPath+'PassProposal/<int:pk>', views.PassProposal.as_view(), name='PassProposal'), #論文
+    path('PassProposal/<int:pk>', views.PassProposal.as_view(), name='PassProposal'), #論文
+    #學生共用
+    path('BorrowPaper/<int:pk>', views.BorrowPaper.as_view(), name='BorrowPaper'),
+    path('MakeBooking/<int:pk>', views.BorrowPaper.MakeBooking, name='MakeBooking'),#借用表單
+    path('GetEntityPaper/<int:pk>', views.GetEntityPaper.as_view(), name='GetEntityPaper'),
+    path('UserBooking/<int:pk>', views.UserBooking.as_view(), name='UserBooking'),#預約清單
+    path('DeleteBooking/<int:pk>', views.UserBooking.deleteBooking, name='DeleteBooking'),
    
-]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+urlpatterns += staticfiles_urlpatterns()

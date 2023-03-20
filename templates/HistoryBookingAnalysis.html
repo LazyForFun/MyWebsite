@@ -1,0 +1,15 @@
+{% extends 'layout.html' %}
+
+{% block title %}歷年借閱分析{% endblock %}
+
+{% block content %}
+    <form method="POST">
+        {% csrf_token %}
+        類型:
+        <select type="Select" name="field">
+            <option value = '0' {% if field == 0 %}selected{% endif %}>軟體開發及程式設計</option>
+            <option value = '1' {% if field == 1 %}selected{% endif %}>網路及多媒體應用</option>
+        </select>
+        <input type="submit"class="btn btn-primary" value="篩選">
+    </form>
+{% endblock %}

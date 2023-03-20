@@ -1,0 +1,43 @@
+{% extends "layout.html" %}
+
+{% block title %}
+註冊
+{% endblock %}
+{% block content %}
+<div class="container">
+    <form action="" method="POST">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">姓名：</div>
+            <div class="col-4 themed-grid-col">
+                <input class="form-control" type="text" name="name">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">帳號：</div>
+            <div class="col-4 themed-grid-col">
+                <input class="form-control" type="text" name="username">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">密碼：</div>
+            <div class="col-4 themed-grid-col">
+                <input class="form-control" type="password" name="password">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">email：</div>
+            <div class="col-4 themed-grid-col">
+                <input class="form-control" type="text" name="mail">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">畢業年分(民國入學年+4)：</div>
+            <div class="col-4 themed-grid-col">
+                <input class="form-control" type="number" name="graduateLevel">
+            </div>
+        </div>
+        <input class="btn btn-outline-primary" type="submit" value="註冊">
+    </form>
+</div>
+{% endblock %}

@@ -6,6 +6,7 @@ from decimal import Decimal
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser, UserManager
 from django import forms
+import datetime
 
 # Create your models here.
 
@@ -38,29 +39,30 @@ class User(AbstractUser):
 
 
 class Project(models.Model):
-    owner = models.OneToOneField(User, on_delete=models.PROTECT, unique=True) #誰做這個專題的
-    username = models.CharField(max_length = 12)
+    user = models.OneToOneField(User, on_delete=models.PROTECT, unique=True) #誰做這個專題的
     name = models.CharField(max_length = 30) #專題名稱
     report = models.FileField(upload_to = "Report/", default=None)
-    code = models.FileField(upload_to = "Code/", default=None)
     poster = models.ImageField(upload_to = "Poster/", default=None)
     professor = models.CharField(max_length = 5)#指導教授
     
+    FIELD = ((0, '軟體開發及程式設計'),
+            (1, '網路及多媒體應用'))
+    field = models.IntegerField(choices=FIELD, default=0)
+
     class Meta:
-        ordering = ["owner"]
+        ordering = ["user"]
 
     def __str__(self):
         return self.name
 
 class License(models.Model):
-    owner = models.ForeignKey(User, null = True, on_delete=models.PROTECT)
-    username = models.CharField(max_length = 12)
+    user = models.ForeignKey(User, null = True, on_delete=models.PROTECT)
     name = models.CharField(max_length = 30) #證照名稱
     acqDate = models.DateField(default=timezone.now)#證照取得日期
     organizer = models.CharField(max_length = 30)#主辦單位
 
     LEVEL = (('A', 'A'),
-                     ('B', 'B',))
+             ('B', 'B',))
     level = models.CharField(max_length = 1, choices = LEVEL, default = 0)
 
     PASS = ((0, '審核中'),
@@ -71,15 +73,14 @@ class License(models.Model):
     image = models.ImageField(upload_to='image/', blank=False, null=False, default=None)
 
     class Meta:
-        ordering = ["owner", "level"]
+        ordering = ["user__username", "level"]
 
     def __str__(self):
         return self.name
 
 class Proposal(models.Model):
-    owner = models.OneToOneField(User, on_delete = models.PROTECT)
+    user = models.ForeignKey(User, null = True, on_delete=models.PROTECT)
     name = models.CharField(max_length = 30) #論文名稱
-    username = models.CharField(max_length = 12, default="")#創作者
     professor = models.CharField(max_length = 5)#指導教授
     postDate = models.DateField(default = timezone.now)#計畫發表日期
     postProof = models.FileField(upload_to='image/', blank=False, null=False, default=None)#發表證明
@@ -99,32 +100,37 @@ class Proposal(models.Model):
 
     def __str__(self):
         return self.name
-class Booking(models.Model):
-    username = models.CharField(max_length=12)#借用人姓名
-    paperName = models.CharField(max_length=30)#文本名稱
-    professor = models.CharField(max_length=12)#指導教授
-    TYPE = ((0, '日間碩士班論文'),
-            (1, '碩士在職專班論文'),
-            (2, '大學部專題報告書'),)
-    type = models.IntegerField(choices=TYPE, default = 0)
-    author = models.CharField(max_length=12, default="")
-
-    STATE = ((0, '已預約'),
-             (1, '已借閱'),)
-    state = models.IntegerField(choices = STATE, default = 0)
-
-    def __str__(self):
-        return self.username
     
 class Paper(models.Model):
-    username = models.CharField(max_length=12)
+    author = models.CharField(max_length=12)
     name = models.CharField(max_length=30)
     TYPE = ((0, '日間碩士班論文'),
             (1, '碩士在職專班論文'),
             (2, '大學部專題報告書'),)
     type = models.IntegerField(choices=TYPE, default = 0)
+    barCode = models.CharField(max_length=20, null=True)
 
     professor = models.CharField(max_length=12)
 
     def __str__(self):
         return self.name
+    
+class Booking(models.Model):
+    user = models.ForeignKey(User, null = True, on_delete=models.PROTECT)
+    paper = models.ForeignKey(Paper, null = True, on_delete=models.PROTECT)
+    
+    STATE = ((0, '已預約'),
+             (1, '已借閱'),
+             (2, '已完成'))
+    state = models.IntegerField(choices = STATE, default = 0)
+    bookingDate = models.DateField(default=timezone.now())
+    bookingTime = models.TimeField(default=datetime.datetime.now())
+    takingDate = models.DateField(default=timezone.now())
+    takingTime = models.TimeField(null = True)
+
+    
+    def __str__(self):
+        return self.user.name
+    
+    class Meta:
+        ordering = ['-id']

@@ -12,31 +12,30 @@ class ProjectModelForm(forms.ModelForm):
 
     class Meta:
         model = Project
-        fields = ['owner', 'username', 'name', 'professor', 'report', 'code', 'poster']
+        fields = ['user', 'name', 'professor', 'report', 'poster', 'field']
         widgets = {
-            'owner':forms.HiddenInput(),#預設
-            'username':forms.HiddenInput(),#預設
+            'user':forms.HiddenInput(),#預設
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'report': forms.FileInput(attrs={'class': 'form-control'}),
-            'code': forms.FileInput(attrs={'class': 'form-control'}),
             'poster': forms.FileInput(attrs={'class': 'form-control'}),
             'professor': forms.TextInput(attrs={'class': 'form-control'}),
-            
+            'field': forms.Select(attrs={'class':'form-control'})
         }
         labels = {
             'name': '專題名稱',
             'report': '專題報告書',
             'professor': '指導教授',
+            'poster': '海報',
+            'field':'領域',
         }
 
 class LicenseModelForm(forms.ModelForm):
 
     class Meta:
         model = License
-        fields = ['owner', 'username', 'name', 'level', 'acqDate', 'organizer', 'image']
+        fields = ['user', 'name', 'level', 'acqDate', 'organizer', 'image']
         widgets = {
-            'owner':forms.HiddenInput(),#預設
-            'username':forms.HiddenInput(),#預設
+            'user':forms.HiddenInput(),#預設
             'name':forms.TextInput(attrs={'class': 'form-control'}),
             'level':forms.Select(attrs={'class': 'form-control'}),
             'acqDate':forms.DateInput(attrs={'class': 'form-control'}),
@@ -55,10 +54,10 @@ class ProposalModelForm(forms.ModelForm):
 
     class Meta:
         model = Proposal
-        fields = ['owner', 'name', 'professor', 'type', 'postDate', 'postProof', 'letter',
-                  'post', 'seminarName', 'seminarDate', 'journalNumber', 'username']
+        fields = ['user', 'name', 'professor', 'type', 'postDate', 'postProof', 'letter',
+                  'post', 'seminarName', 'seminarDate', 'journalNumber']
         widgets = {
-            'owner':forms.HiddenInput(),
+            'user':forms.HiddenInput(),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'professor': forms.TextInput(attrs={'class': 'form-control'}),
             'type': forms.Select(attrs={'class': 'form-control'}),
@@ -69,12 +68,9 @@ class ProposalModelForm(forms.ModelForm):
             'seminarName': forms.TextInput(attrs={'class': 'form-control'}),
             'seminarDate': forms.DateInput(attrs={'class': 'form-control'}),
             'journalNumber': forms.NumberInput(attrs={'class': 'form-control'}),
-            'file': forms.FileInput(attrs={'class': 'form-control'}),
-            'username': forms.HiddenInput(),
         }
         labels = {
             'name': '論文名稱',
-            'file': '專題壓縮檔案',
             'professor': '指導教授',
             'postDate':'論文發表日期',
             'type': '日碩/職碩',
@@ -110,11 +106,11 @@ class LicenseAuditForm(forms.ModelForm):
         model = License
         fields = ['name', 'level', 'acqDate', 'organizer', 'pazz',]
         widgets = {
-            'name':forms.TextInput(attrs={'class': 'form-control'}),
-            'level':forms.Select(attrs={'class': 'form-control'}),
-            'acqDate':forms.DateInput(attrs={'class': 'form-control'}),
-            'organizer':forms.TextInput(attrs={'class': 'form-control'}),
-            'pazz':forms.Select(attrs={'class': 'form-control'}),
+            'name':forms.TextInput(attrs={'class': 'form-control', 'style':'width : 300px;'}),
+            'level':forms.Select(attrs={'class': 'form-control', 'style':'width : 300px'}),
+            'acqDate':forms.DateInput(attrs={'class': 'form-control', 'style':'width : 300px'}),
+            'organizer':forms.TextInput(attrs={'class': 'form-control', 'style':'width : 300px'}),
+            'pazz':forms.Select(attrs={'class': 'form-control', 'style':'width : 300px'}),
         }
         labels = {
             'name': '證照名稱(請填全名)',
@@ -145,18 +141,11 @@ class UserEditForm(forms.ModelForm):
 class BookingModelForm(forms.ModelForm):
     class Meta:
         model = Booking
-        fields = ['username', 'paperName', 'author', 'professor', 'type',]
+        fields = ['user', 'paper']
 
         widgets = {
-            'username':forms.TextInput(attrs={'class': 'form-control'}),
-            'paperName':forms.TextInput(attrs={'class': 'form-control'}),
-            'author':forms.TextInput(attrs={'class': 'form-control'}),
-            'professor':forms.TextInput(attrs={'class': 'form-control'}),
-            'type':forms.HiddenInput(),
+            'user':forms.HiddenInput(),
+            'paper':forms.HiddenInput(),
         }
         labels = {
-            'username': '借閱人姓名',
-            'paperName': '文本名稱',
-            'author': '作者',
-            'professor': '指導教授',
         }

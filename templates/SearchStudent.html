@@ -37,5 +37,14 @@
         </tbody>
     </table>
 </div>
+<p style="text-align:center">
+    {% for page_number in object_list.paginator.page_range %}
+      {% ifequal page_number  object_list.number %}
+        <button class="btn btn-outline-primary">{{ page_number }}</button>
+      {% else %}
+        <a href="?page={{ page_number }}" class="btn btn-primary">{{ page_number }}</a>
+      {% endifequal %}
+    {% endfor %}
+</p>
 
 {% endblock %}

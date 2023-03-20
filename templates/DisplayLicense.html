@@ -13,6 +13,7 @@
     </select> 
     審核:
     <select class = "select" name = "pazz">
+        <option value = 0 {% if pazz == 0 %}selected{% endif %}>審核中</option>
         <option value = 1 {% if pazz == 1 %}selected{% endif %}>通過</option>
         <option value = 2 {% if pazz == 2 %}selected{% endif %}>未通過</option>
     </select>
@@ -34,15 +35,30 @@
             <tbody>
                 {% for license in license %}
                     <tr>
-                        <td>{{ license.username }}</td>
-                        <td>{{ license.owner.username }}</td>
+                        <td>{{ license.user.name }}</td>
+                        <td>{{ license.user.username }}</td>
                         <td>{{ license.level }}</td>
                         <td>{{ license.name }}</td>
-                        <td>{{ license.get_pazz_display }}</td>
+                        {% if license.pazz == 0 %}
+                            <td><font color="blue">{{ license.get_pazz_display }}</font></td>
+                        {% elif license.pazz == 1 %}
+                            <td><font color="green">{{ license.get_pazz_display }}</font></td>
+                        {% elif license.pazz == 2 %}
+                            <td><font color="red">{{ license.get_pazz_display }}</font></td>
+                        {% endif %}
                         <td><a href="{% url 'AuditLicense' pk=license.id %}"class="btn btn-primary">檢視</a></td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+    <p style="text-align:center">
+        {% for page_number in license.paginator.page_range %}
+          {% ifequal page_number  license.number %}
+            <button class="btn btn-outline-primary">{{ page_number }}</button>
+          {% else %}
+            <a href="?page={{ page_number }}" class="btn btn-primary">{{ page_number }}</a>
+          {% endifequal %}
+        {% endfor %}
+    </p>
 {% endblock %}

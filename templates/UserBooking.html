@@ -1,0 +1,47 @@
+{% extends 'layout.html' %}
+
+{% block title %}我的預約{% endblock %}
+
+{% block content %}
+<div class="container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">報告書名稱</th>
+                <th scope="col">條碼</th>
+                <th scope="col">作者</th>
+                <th scope="col">指導教授</th>
+                <th scope="col">類型</th>
+                <th scope="col">預約日期</th>
+                <th scope="col">預約狀況</th>
+                <th scope="col">取消預約</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for booking in booking %}
+                <tr>
+                    <td>{{ booking.paper.name }}</td>
+                    <td>{{ booking.paper.barCode }}</td>
+                    <td>{{ booking.user.name }}</td>
+                    <td>{{ booking.paper.professor }}</td>
+                    <td>{{ booking.paper.get_type_display }}</td>
+                    <td>{{ booking.bookingDate }}</td>
+                    <td>{{ booking.get_state_display }}</td>
+                    {% if booking.state == 0 %}
+                        <td><a href="{% url 'DeleteBooking' pk=booking.id %}" class="btn btn-danger">取消</a></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+<p style="text-align:center">
+    {% for page_number in booking.paginator.page_range %}
+      {% ifequal page_number  booking.number %}
+        <button class="btn btn-outline-primary">{{ page_number }}</button>
+      {% else %}
+        <a href="?page={{ page_number }}" class="btn btn-primary">{{ page_number }}</a>
+      {% endifequal %}
+    {% endfor %}
+</p>
+{% endblock %}
