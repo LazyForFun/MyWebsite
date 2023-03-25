@@ -1,0 +1,57 @@
+{% extends 'layout.html' %}
+{% block title %}專題報告書列表{% endblock %}
+
+{% block content %}
+<form method = "GET">
+    {% csrf_token %}
+    作者:<input type = "search" name = "author" placeholder = "">
+    專題報告書名稱:<input type = "search" name = "name" placeholder = "">
+    指導教授:<input type = "search" name = "professor" placeholder = "">
+    類型:
+    <select class = "select" name = "type">
+        <option value = -1></option>
+        <option value = 0 {% if type == 0 %} selected="selected" {% endif %}>大學部</option>
+        <option value = 1 {% if type == 1 %} selected="selected" {% endif %}>日間碩士班</option>
+        <option value = 2 {% if type == 2 %} selected="selected" {% endif %}>碩士在職專班</option>
+    </select> 
+    
+    <input type="submit" class="btn btn-primary" name = "search" value="篩選" />
+</form>
+
+    <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">作者</th>
+                    <th scope="col">報告書名稱</th>
+                    <th scope="col">學制</th>
+                    <th scope="col">編碼</th>
+                    <th scope="col">指導教授</th>
+                    <th scope="col">預約</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for paper in paper %}
+                    <tr>
+                        <td>{{ paper.project.user.name }}</td>
+                        <td>{{ paper.project.name }}</td>
+                        <td>{{ paper.project.get_type_display }}</td>
+                        <td>{{ paper.barCode }}</td>
+                        <td>{{ paper.project.professor }}</td>
+                        <td><a href="{% url 'MakeBooking' pk=paper.id %}" class="btn btn-primary">預約</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <p style="text-align:center">
+        {% for page_number in paper.paginator.page_range %}
+          {% ifequal page_number  paper.number %}
+            <button class="btn btn-outline-primary">{{ page_number }}</button>
+          {% else %}
+            <a href="?page={{ page_number }}" class="btn btn-primary">{{ page_number }}</a>
+          {% endifequal %}
+        {% endfor %}
+    </p>
+{% endblock %}

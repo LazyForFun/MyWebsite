@@ -1,0 +1,85 @@
+<!DOCTYPE>
+<html lan = "en" dir = "ltr">
+    <head>
+        <meta charset = "utf-8">
+         <!-- Bootstrap CSS -->
+         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.rtl.min.css" integrity="sha384-dc2NSrAXbAkjrdm9IYrX10fQq9SDG6Vjz7nQVKdKcJl3pC+k37e7qJR5MVSCS+wR" crossorigin="anonymous">
+        <title>資科系系務</title>
+    </head>
+    
+    <body>
+    <header class="p-3 text-bg-dark">
+    <div class="container">
+      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start" style="display: flex;font-size:large;">
+        <p style="flex: 1;">
+            {% load static %}
+            <img src="{% static '/images/logo.jpg'%}" width="225px" height = "100px">
+        </p>
+        <p style="flex: 1;">
+            <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+                {% if user and user.is_authenticated %}
+                    {% if user.identity == 0 %}
+                        {% if user.not_graduated %}
+                            <li><a href="{% url 'PassProject' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">專題繳交</a></li>
+                            <li><a href="{% url 'PassLicense' pk=user.id %}" class="nav-link px-2 text-black btn btn-danger">證照登錄</a></li>
+                        {% endif %}
+                        <li><a href="{% url 'UserProject' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">我的專題</a></li>
+                        <li><a href="{% url 'UserLicense' pk=user.id %}" class="nav-link px-2 text-black btn btn-danger">我的證照</a></li>
+                        <li><a href="{% url 'BorrowPaper' pk=user.id%}" class="nav-link px-2 text-black btn btn-info">預約借用專題報告書</a></li>
+                        <li><a href="{% url 'UserBooking' pk=user.id%}" class="nav-link px-2 text-black btn btn-danger">我的預約</a></li>
+                    {% elif user.identity == 1 %}
+                        <li><a href="{% url 'DisplayLicense' %}" class="nav-link px-2 text-black btn btn-info">證照總覽</a></li>
+                        <li><a href="{% url 'DisplayProject' %}" class="nav-link px-2 text-black btn btn-danger">專題總覽</a></li>
+                        <li><a href="{% url 'ImportAndExport' %}" class="nav-link px-2 text-black btn btn-info">新增學生</a>
+                        <li><a href="{% url 'SearchStudent' %}" class="nav-link px-2 text-black btn btn-danger">修改學生資料</a></li>
+                        <li><a href="{% url 'BookingList' %}" class="nav-link px-2 text-black btn btn-info">借閱申請</a></li>
+                        <li><a href="{% url 'HistoryBookingAnalysis' %}" class="nav-link px-2 text-black btn btn-danger">歷年借閱分析</a></li>
+                    {% else %}
+                        <li><a href="{% url 'PassProposal' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">論文計畫繳交</a></li>
+                        <li><a href="{% url 'PassFinal' pk=user.id %}" class="nav-link px-2 text-black btn btn-danger">論文繳交</a></li>
+                        <li><a href="{% url 'BorrowPaper' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">預約專題報告書</a></li>
+                        <li><a href="{% url 'UserBooking' pk=user.id%}" class="nav-link px-2 text-black btn btn-danger">我的預約</a></li>
+                    {% endif %}
+                {% else %}
+                    <li><a href="{% url 'Home' %}" class="nav-link px-2 text-black btn btn-info">首頁</a></li>
+                {% endif %}
+            </ul>
+        </p>
+
+        <p style="flex: 1;">
+            {% if user.is_authenticated %}
+                <div class="col-md-3 text-end">
+                    <form method = "post" action = "{% url 'login' %}">{% csrf_token %}
+                        <a href="{% url 'EditPassword' pk=user.id %}" class="btn btn-warning me-2">{{ user.name }}</a>
+                        <a href="{% url 'logout' %}" class="btn btn-warning me-2">登出</a>
+                    </form>
+                </div>
+            {% else %}
+                <div class="col-md-3 text-end">
+                    <a href="{% url 'login' %}" class="btn btn-warning me-2">登入</a>
+                </div>
+            {% endif %}
+        </p>
+      </div>
+    </div>
+  </header>
+       
+        <div class="container">
+            <h1>{% block title %}{% endblock %}</h1>
+        </div>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+        {% if messages %}
+            {% for message in messages %}
+                <script>
+                    alert('{{ message }}');
+                </script>   
+            {% endfor %}
+        {% endif %}
+        <br><br>    
+        <div class="container" align="center">
+            © 2020- 臺北市立大學 資訊科學系
+        </div>
+    </body>
+</html>

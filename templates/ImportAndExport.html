@@ -1,0 +1,68 @@
+{% extends "layout.html" %}
+{% block title %}新增學生{% endblock %}
+
+{% block content %}
+<div class="continer"> 
+    <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+ 
+    <div class="row">
+        <div class="col-md-6 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>新增多個學生</h2>
+            
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+ 
+                <div class="col-md-8 col-sm-12 col-xs-12 form-group">
+                 
+                </label>               
+                </div>
+               
+                    <input type="file" name="myfile" class="form-control"><br/>
+                    <button type="submit" class="btn btn-outline-primary" name="multi" value="user">上傳</button>                            
+                    <br/>
+                </div>
+            </div>
+        </div>
+    </div>
+    </form>
+    <hr>
+    <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="row">
+        <div class="col-md-6 col-xs-12">
+            <div class="x_panel">
+                <div class="x_title">
+                    <h2>新增單個學生</h2>
+            
+                <div class="clearfix"></div>
+            </div>
+            <div class="x_content">
+ 
+                <div class="col-md-8 col-sm-12 col-xs-12 form-group">
+                 
+                </label>               
+                </div>
+               
+                    學號:<input type="text" name="username" class="form-control"><br/>
+                    密碼:<input type="password" name="password" class="form-control"><br/>
+                    姓名:<input type="text" name="name" class="form-control"><br/>
+                    畢業年分:<input type="text" name="graduateLevel" class="form-control"><br/>
+                    email:<input type="text" name="email" class="form-control"><br/>
+                    <button type="submit" class="btn btn-outline-primary" name="single" value="user">新增</button>                            
+                    <br/>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div>
+
+    </div>    
+    </form>
+</div>
+    
+{% endblock %}

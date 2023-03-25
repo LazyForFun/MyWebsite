@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+{% block title %}已上傳的證照{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <table class="table">
+            <thead>
+                <th>證照名稱</th>
+                <th>證照級別</th>
+                <th>取得日期</th>
+                <th>審核</th>
+                <th></th>
+            </thead>
+            <tbody>
+                {% for license in license %}
+                <tr>
+                    <td>{{ license.name }}</td>
+                    <td>{{ license.level }}</td>
+                    <td>{{ license.acqDate }}</td>
+                    <td>{{ license.get_pazz_display }}</td>
+                    <td>
+                        {% if license.pazz == 0 %}
+                            <a href="{% url 'EditLicense' pk=license.id %}" class="btn btn-primary">編輯</a>
+                        {% elif license.pazz == 2 %}
+                            <a href="{% url 'DeleteLicense' pk=license.id %}" class="btn btn-danger">刪除</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}

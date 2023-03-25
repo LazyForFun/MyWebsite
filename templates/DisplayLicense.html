@@ -1,0 +1,65 @@
+{% extends "layout.html" %}
+{% block title %}證照總覽{% endblock %}
+
+{% block content %}
+
+<form method = "POST">
+    {% csrf_token %}
+    姓名:<input type = "search" name = "name" placeholder = "">
+    學號:<input type = "search" name = "username" placeholder = "">
+    級別:
+    <select class = "select" name = "level">
+        <option value = 'A' {% if level == 'A' %} selected="selected" {% endif %}>A</option>
+        <option value = 'B' {% if level == 'B' %} selected="selected" {% endif %}>B</option>
+    </select> 
+    審核:
+    <select class = "select" name = "pazz">
+        <option value = 0 {% if pazz == 0 %}selected{% endif %}>審核中</option>
+        <option value = 1 {% if pazz == 1 %}selected{% endif %}>通過</option>
+        <option value = 2 {% if pazz == 2 %}selected{% endif %}>未通過</option>
+    </select>
+    <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
+    <input type="submit" class="btn btn-primary" name = "export" value="匯出" />
+</form>
+    <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">姓名</th>
+                    <th scope="col">學號</th>
+                    <th scope="col">證照級別</th>
+                    <th scope="col">證照名稱</th>
+                    <th scope="col">審核</th>
+                    <th scope="col">檢視</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for license in license %}
+                    <tr>
+                        <td>{{ license.user.name }}</td>
+                        <td>{{ license.user.username }}</td>
+                        <td>{{ license.level }}</td>
+                        <td>{{ license.name }}</td>
+                        {% if license.pazz == 0 %}
+                            <td><button class="btn btn-outline-primary">{{ license.get_pazz_display }}</button></td>
+                        {% elif license.pazz == 1 %}
+                            <td><button class="btn btn-primary">{{ license.get_pazz_display }}</button></td>
+                        {% elif license.pazz == 2 %}
+                            <td><button class="btn btn-danger">{{ license.get_pazz_display }}</button></td>
+                        {% endif %}
+                        <td><a href="{% url 'AuditLicense' pk=license.id %}"class="btn btn-primary">檢視</a></td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p style="text-align:center">
+        {% for page_number in license.paginator.page_range %}
+          {% ifequal page_number  license.number %}
+            <button class="btn btn-outline-primary">{{ page_number }}</button>
+          {% else %}
+            <a href="?page={{ page_number }}" class="btn btn-primary">{{ page_number }}</a>
+          {% endifequal %}
+        {% endfor %}
+    </p>
+{% endblock %}
