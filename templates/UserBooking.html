@@ -20,11 +20,11 @@
         <tbody>
             {% for booking in booking %}
                 <tr>
-                    <td>{{ booking.paper.name }}</td>
+                    <td>{{ booking.paper.project.name }}</td>
                     <td>{{ booking.paper.barCode }}</td>
                     <td>{{ booking.user.name }}</td>
-                    <td>{{ booking.paper.professor }}</td>
-                    <td>{{ booking.paper.get_type_display }}</td>
+                    <td>{{ booking.paper.project.professor }}</td>
+                    <td>{{ booking.paper.project.get_type_display }}</td>
                     <td>{{ booking.bookingDate }}</td>
                     <td>{{ booking.get_state_display }}</td>
                     {% if booking.state == 0 %}

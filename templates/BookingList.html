@@ -1,7 +1,21 @@
 {% extends "layout.html" %}
-{% block title %}{% endblock %}
+{% block title %}借閱申請{% endblock %}
 
 {% block content %}
+    <form method = "GET">
+        {% csrf_token %}
+        姓名:<input type = "search" name = "name" placeholder = "">
+        學號:<input type = "search" name = "username" placeholder = "">
+        借閱狀況:
+        <select class = "select" name = "state">
+            <option></option>
+            <option value = 0 {% if state == 0 %} selected="selected" {% endif %}>已預約</option>
+            <option value = 1 {% if state == 1 %} selected="selected" {% endif %}>已借閱</option>
+            <option value = 2 {% if state == 2 %} selected="selected" {% endif %}>已歸還</option>
+        </select> 
+    
+        <input type="submit" class="btn btn-primary" name = "search" value="篩選" />
+    </form>
 
     <div class="container">
         <table class="table">
@@ -19,7 +33,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for booking in booking %}
+                {% for booking in object_list %}
                     <tr>
                         <td>{{ booking.user.name }}</td>
                         <td>{{ booking.paper.name }}</td>
@@ -28,11 +42,13 @@
                         <td>{{ booking.paper.professor }}</td>
                         <td>{{ booking.paper.get_type_display }}</td>
                         <td>{{ booking.bookingDate }}     {{ booking.bookingTime }}</td>
-                        <td>{{ booking.takingTime }}</td>
+                        <td>{{ booking.takingDate }}{{ booking.takingTime }}</td>
                         {% if booking.state == 0 %}
-                            <td><button class="btn btn-primary">已預約</button></td>
+                            <td><button class="btn btn-outline-primary">已預約</button></td>
+                        {% elif booking.state == 1 %}
+                            <td><button class="btn btn-primary">已借閱</button></td>
                         {% else %}
-                            <td><a href="{% url 'FinishBooking' pk=booking.id%}" class="btn btn-danger">完成</a></td>
+                            <td><button class="btn btn-danger">已歸還</button></td>
                         {% endif %}
                     </tr>
                 {% endfor %}
@@ -40,7 +56,7 @@
         </table>
     </div>
     <p style="text-align:center">
-        {% for page_number in booking.paginator.page_range %}
+        {% for page_number in object_list.paginator.page_range %}
           {% ifequal page_number  booking.number %}
             <button class="btn btn-outline-primary">{{ page_number }}</button>
           {% else %}

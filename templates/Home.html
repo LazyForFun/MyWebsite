@@ -12,7 +12,8 @@
         </p>
     </div>
     <div class="container"  align="center">
-        {% load static %}
-        <img src="{% static '/images/logo.jpg' %}">
+        <a href="{% url 'GetEntityPaper' %}" class="btn btn-primary">領取報告書</a>
+        <a href="{% url 'ReturnEntityPaper' %}" class="btn btn-primary">歸還報告書</a>
+        <a href="{% url 'login' %}" class="btn btn-primary">登入</a>
     </div>
 {% endblock %}

@@ -16,8 +16,11 @@
         <div class="row mb-3">
             <div class="col-2 themed-grid-col">帳號：</div>
             <div class="col-4 themed-grid-col">
-                <input class="form-control" type="text" name="username">
+                <input class="form-control" type="text" name="username" placeholder="請輸入學號">
             </div>
+            {% if form.username.errors %}
+                <div class="error">{{ form.username.errors }}</div>
+            {% endif %}
         </div>
         <div class="row mb-3">
             <div class="col-2 themed-grid-col">密碼：</div>
@@ -32,9 +35,18 @@
             </div>
         </div>
         <div class="row mb-3">
-            <div class="col-2 themed-grid-col">畢業年分(民國入學年+4)：</div>
+            <div class="col-2 themed-grid-col">畢業年份：</div>
             <div class="col-4 themed-grid-col">
-                <input class="form-control" type="number" name="graduateLevel">
+                <input class="form-control" type="number" name="graduateLevel" placeholder="民國入學年+4">
+            </div>
+        </div>
+        <div class="row mb-3">
+            <div class="col-2 themed-grid-col">學制：</div>
+            <div class="col-4 themed-grid-col">
+                <select type = "Select" name="identity" class="form-control">
+                    <option value = 0>大學部</option>
+                    <option value = 2>碩士班</option>
+                </select>
             </div>
         </div>
         <input class="btn btn-outline-primary" type="submit" value="註冊">

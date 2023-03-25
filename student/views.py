@@ -10,27 +10,31 @@ from django.contrib import auth, messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings 
 from django.http import HttpResponse, HttpResponseRedirect
-from django.template.loader import render_to_string
 
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage, send_mail
 
-import os, csv, datetime
+from django.db.models.functions import ExtractYear
+
+import os, csv, datetime, re
 import pandas as pd
 import django.utils.timezone as timezone
 from django.utils.http import urlquote
 from django.utils.crypto import get_random_string
+from datetime import timedelta
 
-from .forms import ProjectModelForm, LicenseModelForm, ProposalModelForm, LicenseEditForm, LicenseAuditForm, BookingModelForm
+from .forms import ProjectModelForm, LicenseModelForm, ProposalModelForm, LicenseEditForm, LicenseAuditForm, FinalModelForm
 from .models import User, Project,License, Proposal, Booking, Paper
 from . import forms
-
+#csshare.tw@gmail.com
+#cs@go.utaipei.edu.tw
 
 # Create your views here.
 
 limit = 10 #分頁器單個頁面的資料數
+pattern = r'^(u\d{8}|csshare[0-9]+)$' #可使用的帳號格式
 
 class Home(View):
 
@@ -43,12 +47,23 @@ class Signin(View):
     
     def post(self, request):
         getValue = self.request.POST
-        if getValue:
-            user = User.objects.create(name = getValue['name'], username = getValue['username'], password = make_password(getValue['password']), email = getValue['mail'], graduateLevel = int(getValue['graduateLevel']) + 1911)
-            user.save()
-            messages.success(request, "註冊成功!!")
-        return redirect(reverse('login'))
-    
+        try:
+            checkUser = User.objects.get(username = getValue['username'])
+        except User.DoesNotExist:
+            checkUser = None
+        if checkUser:
+            messages.info(request, "使用者已存在!!")
+            return redirect(reverse('Signin'))
+        else:
+            if re.match(pattern, getValue['username']):
+                user = User.objects.create(name = getValue['name'], username = getValue['username'], password = make_password(getValue['password']), email = getValue['mail'], graduateLevel = int(getValue['graduateLevel']) + 1911, identity = getValue['identity'])
+                user.save()
+                messages.success(request, "註冊成功!!")
+                return redirect(reverse('login'))
+            else:
+                messages.success(request, '請輸入有效的學號!!')
+                return redirect(reverse('Signin'))
+            
 class EditPassword(LoginRequiredMixin, View):
     def get(self, request, pk):
         return render(request, 'registration/EditPassword.html')
@@ -85,7 +100,7 @@ class ForgetPassword(View):
 
         if user:
             newpassword = get_random_string(length=8)
-            send_mail('資科系務系統新密碼', '你的新密碼是' + newpassword, 'ling900101@gmail.com', [user.email,], fail_silently=False)
+            #send_mail('資科系務系統新密碼', '你的新密碼是' + newpassword, 'ling900101@gmail.com', [user.email,], fail_silently=False)
             user.password = make_password(newpassword)
             user.save()
             messages.success(request, "重設成功，請至信箱確認新密碼!")
@@ -142,7 +157,7 @@ class UserLicense(View):
 class PassProject(LoginRequiredMixin, CreateView):
 
     def get(self, request, pk):
-        form = ProjectModelForm(initial={'user': request.user.id})
+        form = ProjectModelForm(initial={'user': request.user.id, 'type': 0})
         context = {
             'form': form,
         }
@@ -155,10 +170,10 @@ class PassProject(LoginRequiredMixin, CreateView):
             data = Project.objects.get(user=self.kwargs['pk'])
             user = User.objects.get(id=self.kwargs['pk'])
             barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'A'
-            paper = Paper.objects.create(author=user.name, name=data.name, type=2, professor=data.professor, barCode=barCode)
+            paper = Paper.objects.create(project = data, barCode = barCode)
             paper.save()
             barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'B'
-            paper = Paper.objects.create(author=user.name, name=data.name, type=2, professor=data.professor, barCode=barCode)
+            paper = Paper.objects.create(project = data, barCode=barCode)
             paper.save()
             messages.success(request, "繳交成功")
             return redirect(reverse('PassProject', kwargs={'pk': self.request.user.id}))
@@ -198,23 +213,72 @@ class PassLicense(LoginRequiredMixin, View):
 class PassProposal(LoginRequiredMixin, View):
 
     def get(self, request, pk):
-        user = User.objects.get(id = request.user.id)
-        form = ProposalModelForm(initial={'owner': user.id})
-        if request.method == "POST":
-            form = ProposalModelForm(request.POST, request.FILES)
-            if form.is_valid():
-                form.save()
-                data = Proposal.objects.get(owner=self.kwargs['pk'])
-                paper = Paper.objects.create(username=data.username, name=data.name, type=data.type, professor=data.professor)
-                paper.save()
-                return redirect('/Home')
-
+        user = User.objects.get(id = pk)
+        form = ProposalModelForm(initial={'user': user.id})
         context = {
             'form': form,
         }
 
         return render(request, 'PassProposal.html', context)
     
+    def post(self, request, pk):
+        form = ProposalModelForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "繳交成功!!")
+            return redirect(reverse('PassProposal', kwargs={'pk':pk}))
+        
+        context = {
+            'form': form,
+        }
+
+        return render(request, 'PassProposal.html', context)      
+
+class PassFinal(LoginRequiredMixin, View):
+
+    def get(self, request, pk):
+        try:
+            proposal = Proposal.objects.get(user = pk)
+        except Proposal.DoesNotExist:
+            proposal = None
+        if proposal:
+            form = FinalModelForm(initial={'user':pk, 'proposal': proposal.id, 'professor':proposal.professor, 'name':proposal.name}) 
+        else:
+            form = FinalModelForm()
+            messages.success(request, "你還沒繳交論文計畫!!")
+        context = {
+            'form':form
+        }
+        return render(request, 'PassFinal.html', context)
+    
+    def post(self, request, pk):
+        form = FinalModelForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            proposal = Proposal.objects.get(user = pk)
+            project = Project.objects.get(proposal = proposal.id)
+            delta = project.postDate - proposal.postDate
+            if delta > timedelta(days=92):
+                form.save()
+                data = Project.objects.get(user=self.kwargs['pk'])
+                user = User.objects.get(id=self.kwargs['pk'])
+                barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'A'
+                paper = Paper.objects.create(project = data, barCode = barCode)
+                paper.save()
+                barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'B'
+                paper = Paper.objects.create(project = data, barCode=barCode)
+                paper.save()
+
+                messages.success(request, "繳交成功!!")
+                return redirect(reverse('PassFinal', kwargs={'pk':pk}))
+            else:
+                project.delete()
+                messages.success(request, "學位考試與計畫發表日期應相差3個月以上!!")
+        context = {
+            'form':form
+        }
+        return render(request, 'PassFinal.html', context)
+
 class BorrowPaper(ListView):
 
     def get(self, request, pk):
@@ -222,13 +286,13 @@ class BorrowPaper(ListView):
         getValue = self.request.GET
         if getValue:
             if 'author' in getValue:
-                queryDict['author__icontains'] = getValue['author']
+                queryDict['project__user__name__icontains'] = getValue['author']
             if 'name' in getValue:
-                queryDict['name__icontains'] = getValue['name']
+                queryDict['project__name__icontains'] = getValue['name']
             if 'type' in getValue and int(getValue['type']) >= 0:
-                queryDict['type'] = int(getValue['type'])
+                queryDict['project__type'] = int(getValue['type'])
             if 'professor' in getValue:
-                queryDict['professor__icontains'] = getValue['professor']
+                queryDict['project__professor__icontains'] = getValue['professor']
             paper = Paper.objects.filter(**queryDict)
         else:
             paper = Paper.objects.all()
@@ -270,7 +334,7 @@ class BorrowPaper(ListView):
     
 class GetEntityPaper(View):
     
-    def get(self, request, pk):
+    def get(self, request):
         
         booking = Booking.objects.filter(user=request.user.id, state=1)
         context = {
@@ -278,18 +342,20 @@ class GetEntityPaper(View):
         }
         return render(request, 'GetEntityPaper.html', context)
     
-    def post(self, request, pk):
+    def post(self, request):
 
         try:
             paper = Paper.objects.get(barCode = request.POST['barCode'])
-            changeBookingState=Booking.objects.get(paper = paper.id, user = request.user.id, state = 0)
+            changeBookingState=Booking.objects.get(paper = paper.id, state = 0)
         except Booking.DoesNotExist:
             changeBookingState=None
         if changeBookingState and changeBookingState.state == 0:
             changeBookingState.state = 1
+            changeBookingState.lendTimes = changeBookingState.paper.lendTimes + 1
             changeBookingState.takingTime = datetime.datetime.now()
             changeBookingState.takingDate = datetime.date.today()
             changeBookingState.save()
+            messages.success(request, "領取成功!")
         else:
             messages.success(request, "借閱預約不存在...")
 
@@ -299,7 +365,27 @@ class GetEntityPaper(View):
             'booking':booking
         }
         return render(request, 'GetEntityPaper.html', context)
-    
+class ReturnEntityPaper(View):
+    def get(self, request):
+        return render(request, 'ReturnEntityPaper.html')
+    def post(self, request):
+        getValue = self.request.POST
+        try:
+            booking = Booking.objects.get(paper__barCode = getValue['barCode'], state = 1)
+        except Booking.DoesNotExist:
+            booking = None
+
+        if booking:
+            booking.state = 2
+            booking.underTaker = User.objects.get(username = getValue['underTaker']).name
+            booking.save()
+            messages.success(request, "歸還成功!")
+        else:
+            messages.success(request, "此報告書並未被借閱...")
+
+        return render(request, "ReturnEntityPaper.html")
+
+
 class UserBooking(ListView):
 
     def get(self, request, pk):
@@ -487,7 +573,8 @@ class ImportAndExport(LoginRequiredMixin, View):
                         obj = User.objects.create(username=dbframe.username,password=make_password(dbframe.password), name=dbframe.name,)
                         print(type(obj))
                         obj.save()
- 
+
+                    messages.success(request, "新增成功!")
                     return render(request, 'ImportAndExport.html', {
                         'uploaded_file_url': uploaded_file_url
                     })
@@ -504,8 +591,13 @@ class ImportAndExport(LoginRequiredMixin, View):
             if user:
                 messages.success(request, "已存在的使用者!!")
             else:
-                user = User.objects.create(username=getValue['username'], password = make_password(getValue['password']), name=getValue['name'], graduateLevel=int(getValue['graduateLevel'])+1911)
-                user.save()
+                if re.match(pattern, getValue['username']):
+                    user = User.objects.create(username=getValue['username'], password = make_password(getValue['password']), name=getValue['name'], graduateLevel=int(getValue['graduateLevel'])+1911, email = getValue['email'])
+                    user.save()
+                    messages.success(request, "新增成功!")
+                else:
+                    messages.success(request, "無效的學號!!")
+                
         return render(request, 'ImportAndExport.html')
 
 class SearchStudent(LoginRequiredMixin, ListView):
@@ -516,11 +608,13 @@ class SearchStudent(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         queryDict = {}
-        if "q1" or "q2" in self.request.GET:
-            if "q1" in self.request.GET:
-                queryDict['name__icontains'] = self.request.GET['q1']
-            if "q2" in self.request.GET:
-                queryDict['username__icontains'] = self.request.GET['q2']
+        if self.request.GET:
+            if "name" in self.request.GET:
+                queryDict['name__icontains'] = self.request.GET['name']
+            if "username" in self.request.GET:
+                queryDict['username__icontains'] = self.request.GET['username']
+            if 'graduateLevel' in self.request.GET and self.request.GET['graduateLevel'] != '':
+                queryDict['graduateLevel'] = int(self.request.GET['graduateLevel']) + 1911
             queryset = User.objects.filter(**queryDict)
         else:
             queryset = User.objects.all()
@@ -566,36 +660,44 @@ class ModifyStudentInfo(LoginRequiredMixin, UpdateView):
 
         return redirect(reverse('SearchStudent'))
     
+    def deleteStudent(request, pk):
+        user = User.objects.get(id=pk)
+        user.delete()
+        return redirect(reverse('SearchStudent'))
+    
 class BookingList(LoginRequiredMixin, ListView):
     
-    def get(self, request):
-        booking = Booking.objects.exclude(state = 2)
-        
-        paginator=Paginator(booking, limit)
+    model = Booking
 
-        page=request.GET.get('page')
+    template_name = "BookingList.html"
+
+    def get_queryset(self):
+        queryDict = {}
+        if self.request.GET:
+            if "name" in self.request.GET:
+                queryDict['user__name__icontains'] = self.request.GET['name']
+            if "username" in self.request.GET:
+                queryDict['user__username__icontains'] = self.request.GET['username']
+            if 'state' in self.request.GET and self.request.GET['state'] != '':
+                queryDict['state'] = self.request.GET['state']
+            
+            queryset = Booking.objects.filter(**queryDict)
+        else:
+            queryset = Booking.objects.all()
+
+        paginator=Paginator(queryset, limit)
+
+        page=self.request.GET.get('page')
         
         try:
-            booking=paginator.page(page)
+            queryset=paginator.page(page)
         except PageNotAnInteger:
-            booking=paginator.page(1)
+            queryset=paginator.page(1)
         except EmptyPage:
-            booking=paginator.page(paginator.num_pages)
-        context = {
-            'booking': booking,
-        }
-        return render(request, 'BookingList.html', context)
-    
-    def finishBooking(request, pk):
-        finishbooking=Booking.objects.get(id=pk)
-        finishbooking.state = 2
-        finishbooking.save()
+            queryset=paginator.page(paginator.num_pages)
+        
 
-        booking = Booking.objects.exclude(state = 2)
-        context={
-            'booking': booking
-        }
-        return render(request, 'BookingList.html', context)
+        return queryset
     
 class HistoryBookingAnalysis(LoginRequiredMixin, View):
 
@@ -605,15 +707,38 @@ class HistoryBookingAnalysis(LoginRequiredMixin, View):
     def post(self, request):
         queryDict={}
         getValue = self.request.POST
-        if 'field' in getValue:
-            queryDict['paper__field'] = getValue['field']
+        if getValue:
+            if 'graduateYear' in getValue and getValue['graduateYear'] != '':
+                queryDict['project__user__graduateLevel'] = int(getValue['graduateYear']) + 1911
+            if 'type' in getValue and getValue['type'] != '':
+                queryDict['project__type'] = int(getValue['type'])
+            if 'name' in getValue:
+                queryDict['project__name__icontains'] = getValue['name']
+            if 'field' in getValue and getValue['field'] != '':
+                queryDict['project__field'] = getValue['field']
 
-        booking = Booking.objects.filter(**queryDict)
+            if 'bookingYear' in getValue and getValue['bookingYear'] != '':
+                paper_id = Booking.objects.annotate(year = ExtractYear('bookingDate')).filter(year = int(getValue['bookingYear']) + 1911).values_list('paper__project__id', flat = True).distinct
+                paper = Paper.objects.exclude(lendTimes = 0).filter(id__in = paper_id()).filter(**queryDict)
+                for i in paper:
+                    print(i.project.name)
+            else:
+                paper = Paper.objects.exclude(lendTimes = 0).filter(**queryDict)
+
+        paginator=Paginator(paper, limit)
+
+        page=self.request.GET.get('page')
+        
+        try:
+            paper=paginator.page(page)
+        except PageNotAnInteger:
+            paper=paginator.page(1)
+        except EmptyPage:
+            paper=paginator.page(paginator.num_pages)
 
         context = {
-            'booking': booking
+            'paper': paper
         }
-
         return render(request, 'HistoryBookingAnalysis.html', context)
 
 class AuditLicense(LoginRequiredMixin, UpdateView):

@@ -1,12 +1,13 @@
 {% extends "layout.html" %}
-{% block title %}{% endblock %}
+{% block title %}修改學生資料{% endblock %}
 
 {% block content %}
 
 <form method = "GET">
     {% csrf_token %}
-    姓名:<input type = "search" name = "q1" placeholder = "">
-    學號:<input type = "search" name = "q2" placeholder = "">
+    姓名:<input type = "search" name = "name" placeholder = "">
+    學號:<input type = "search" name = "username" placeholder = "">
+    畢業年份:<input type = "search" name = "graduateLevel" placeholder = "">
 
     <input type="submit" class="btn btn-primary" name="search" value="搜尋" />
 </form>
@@ -18,20 +19,22 @@
                 <th scope="col">姓名</th>
                 <th scope="col"></th>
                 <th scope="col">學號</th>
-                <th scope="col"></th>
+                <th scope="col">email</th>
                 <th scope="col">畢業級</th>
                 <th scope="col">編輯</th>
+                <th scope="col">刪除</th>
             </tr>
         </thead>
         <tbody>
             {% for student in object_list %}
                 <tr>
                     <td>{{ student.name }}</td>
-                    <td></td>
                     <td>{{ student.username }}</td>
-                    <td></td>
+                    <td>{{ student.email }}</td>
                     <td>{{ student.get_graduate_year }}</td>
+                    <td>{{ student.get_identity_display }}</td>
                     <td><a href="{% url 'ModifyStudentInfo' pk=student.id%}" class="btn btn-primary">編輯</a></td>
+                    <td><a href="{% url 'DeleteStudent' pk=student.id%}" class="btn btn-danger">編輯</a></td>
                 </tr>
             {% endfor %}
         </tbody>

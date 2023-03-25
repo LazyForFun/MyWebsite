@@ -1,15 +1,66 @@
 {% extends 'layout.html' %}
 
-{% block title %}歷年借閱分析{% endblock %}
+{% block title %}
+歷年借閱分析<br>
+未出現的紀錄代表無人借閱過
+{% endblock %}
 
 {% block content %}
     <form method="POST">
         {% csrf_token %}
-        類型:
+        借閱年份:
+        <input type="search" name="bookingYear" placeholder="">
+        學年度:
+        <input type="search" name="graduateYear" placeholder="">
+        學制:
+        <select type="Select" name="type">
+            <option></option>
+            <option value = '0' {% if field == 0 %}selected{% endif %}>大學部</option>
+            <option value = '1' {% if field == 1 %}selected{% endif %}>日間碩士班</option>
+            <option value = '2' {% if field == 2 %}selected{% endif %}>碩士在職專班</option>
+        </select>
+        專題報告書名稱:
+        <input type="search" name="name" placeholder="">
+        領域:
         <select type="Select" name="field">
+            <option></option>
             <option value = '0' {% if field == 0 %}selected{% endif %}>軟體開發及程式設計</option>
             <option value = '1' {% if field == 1 %}selected{% endif %}>網路及多媒體應用</option>
+            <option value = '2' {% if field == 2 %}selected{% endif %}>系統及演算法開發</option>
         </select>
         <input type="submit"class="btn btn-primary" value="篩選">
     </form>
+
+    <div class="container">
+        <table class="table">
+            <thead>
+                    <th scope="col">學年度</th>
+                    <th scope="col">學制</th>
+                    <th scope="col">報告書名稱</th>
+                    <th scope="col">領域</th>
+                    <th scope="col">借閱次數</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for paper in paper %}
+                    <tr>
+                        <td>{{ paper.project.user.get_graduate_year }}</td>
+                        <td>{{ paper.project.get_type_display }}</td>
+                        <td>{{ paper.project.name }}</td>
+                        <td>{{ paper.project.get_field_display }}</td>
+                        <td>{{ paper.lendTimes }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <p style="text-align:center">
+        {% for page_number in paper.paginator.page_range %}
+          {% ifequal page_number  paper.number %}
+            <button class="btn btn-outline-primary">{{ page_number }}</button>
+          {% else %}
+            <a href="?page={{ page_number }}" class="btn btn-primary">{{ page_number }}</a>
+          {% endifequal %}
+        {% endfor %}
+    </p>
 {% endblock %}

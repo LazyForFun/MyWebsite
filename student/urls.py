@@ -25,6 +25,8 @@ from django.contrib import staticfiles
 urlpatterns = [
     #首頁標籤
     path('', views.Home.as_view(), name='Home'),
+    path('GetEntityPaper', views.GetEntityPaper.as_view(), name='GetEntityPaper'),
+    path('ReturnEntityPaper', views.ReturnEntityPaper.as_view(), name='ReturnEntityPaper'),
     #登入、登出、個人資訊
     path('login', views.LoginView.as_view(), name='login'),
     path('logout', views.LogoutView.as_view(), name='logout'),
@@ -39,8 +41,8 @@ urlpatterns = [
     path('AuditLicense/<int:pk>', views.AuditLicense.as_view(), name='AuditLicense'),#審核
     path('SearchStudent', views.SearchStudent.as_view(), name='SearchStudent'),#尋找特定學生
     path('ModifyStudentInfo/<int:pk>', views.ModifyStudentInfo.as_view(), name='ModifyStudentInfo'),#修改學生資料
+    path('DeleteStudentInfo/<int:pk>', views.ModifyStudentInfo.deleteStudent, name='DeleteStudent'),
     path('BookingList', views.BookingList.as_view(), name='BookingList'),#借用申請表
-    path('FinishBooking/<int:pk>', views.BookingList.finishBooking, name='FinishBooking'),#刪除已完成的借用
     path('HistoryBookingAnalysis', views.HistoryBookingAnalysis.as_view(), name='HistoryBookingAnalysis'),
     #學士端
     path('PassProject/<int:pk>', views.PassProject.as_view(), name='PassProject'), #專題
@@ -52,10 +54,10 @@ urlpatterns = [
     path('DeleteLicense/<int:pk>', views.DeleteLicense.as_view(), name='DeleteLicense'),
     #碩士端
     path('PassProposal/<int:pk>', views.PassProposal.as_view(), name='PassProposal'), #論文
+    path('PassFinal/<int:pk>', views.PassFinal.as_view(), name='PassFinal'),
     #學生共用
     path('BorrowPaper/<int:pk>', views.BorrowPaper.as_view(), name='BorrowPaper'),
     path('MakeBooking/<int:pk>', views.BorrowPaper.MakeBooking, name='MakeBooking'),#借用表單
-    path('GetEntityPaper/<int:pk>', views.GetEntityPaper.as_view(), name='GetEntityPaper'),
     path('UserBooking/<int:pk>', views.UserBooking.as_view(), name='UserBooking'),#預約清單
     path('DeleteBooking/<int:pk>', views.UserBooking.deleteBooking, name='DeleteBooking'),
    
