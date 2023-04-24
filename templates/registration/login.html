@@ -1,7 +1,7 @@
 {% extends "layout.html" %}
 
 {% block title %}
-登入
+
 {% endblock %}
 {% block content %}
 <div class="container">
@@ -10,7 +10,7 @@
         <div class="row mb-3">
             <div class="col-2 themed-grid-col"><h1>帳號：<h1></div>
             <div class="col-4 themed-grid-col">
-                <input class="form-control" type="text" name="username" id="username">
+                <input class="form-control" type="text" name="username" id="username" placeholder="英文字母要大寫">
             </div>
         </div>
         <div class="row mb-3">
@@ -19,9 +19,17 @@
                 <input class="form-control" type="password" name="password" id="password">
             </div>
         </div>
-        <input class="btn btn-outline-primary" type="submit" value="登入">
+        <div class="container" style="display: flex;">
+            <div style="flex: 1;">
+                <input class="btn btn-outline-primary" type="submit" value="登入" style="font-size: xx-large;">
+            </div>
+            <div style="flex: 1;">
+                <a href="{% url 'Signin' %}" class="btn btn-outline-primary" style="font-size: xx-large;">註冊</a>
+            </div>
+            <div style="flex: 1;">
+                <a href="{% url 'ForgetPassword' %}" class="btn btn-outline-primary" style="font-size: xx-large;">忘記密碼</a>
+            </div>
+        </div>
     </form>
-    <a href="{% url 'Signin' %}" class="btn btn-outline-primary">註冊</a>
-    <a href="{% url 'ForgetPassword' %}" class="btn btn-outline-primary">忘記密碼</a>
 </div>
 {% endblock %}

@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block title %}已上傳的資料{% endblock %}
+
+{% block content %}
+<div class="container">
+    <table class="table">
+        <thead>
+            <th>論文名稱</th>
+            <th>指導教授</th>
+            <th>學制</th>
+            <th>計畫發表/學位考試</th>
+            <th>狀態</th>
+            <th>取消</th>
+        </thead>
+        <tbody>
+            {% for proposal in proposal %}
+                <tr>
+                    <td>{{ proposal.name }}</td>
+                    <td>{{ proposal.professor }}</td>
+                    <td>{{ proposal.get_type_display }}</td>
+                    <td>計畫發表</td>
+                </tr>
+            {% endfor %}
+            {% for final in final %}
+                <tr>
+                    <td>{{ final.name }}</td>
+                    <td>{{ final.professor }}</td>
+                    <td>{{ final.get_type_display }}</td>
+                    <td>學位考試</td>
+                    <td>
+                        {% if final.state == 1 %}
+                            <button class="btn btn-primary">已申請</button>
+                        {% elif final.state == 2 %}
+                            <button class="btn btn-danger">已取消</button>
+                        {% endif %}
+                    </td>
+                    {% if final.state == 1 %}
+                        <td><a href="{% url 'UploadCancel' %}" class="btn btn-danger">取消申請</a></td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

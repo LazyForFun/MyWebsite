@@ -6,7 +6,7 @@ from decimal import Decimal
 from django.utils import timezone
 from django.contrib.auth.models import AbstractUser
 from django import forms
-import datetime
+import datetime, os
 
 # Create your models here.
 
@@ -16,6 +16,10 @@ class User(AbstractUser):
 
     username = models.CharField(max_length=15, unique=True, null=True) #帳號
     name = models.CharField(max_length = 12) #姓名
+
+    DEPARTMENT = ((0, '資訊科學系'),
+                  (1, '外系'),)
+    department = models.IntegerField(choices=DEPARTMENT, null=True, blank=True)
 
     IDENTITY=((0, '學士'),
               (1, '管理員'),
@@ -64,7 +68,7 @@ class Proposal(models.Model):
     user = models.OneToOneField(User, null = True, on_delete=models.PROTECT)
     name = models.CharField(max_length = 30) #論文名稱
     professor = models.CharField(max_length = 5)#指導教授
-    postDate = models.DateField(default=timezone.now)#發表日期
+    postDate = models.DateField(blank=True, null = True)#發表日期
     TYPE = ((1, '日間碩士班'),
             (2, '碩士在職專班'),)
     type = models.IntegerField(choices=TYPE, default=0)
@@ -74,8 +78,8 @@ class Proposal(models.Model):
         return self.name
     
 class Project(models.Model):
-    user = models.OneToOneField(User, on_delete=models.PROTECT, unique=True) #誰做這個專題的
-    proposal = models.OneToOneField(Proposal, on_delete=models.PROTECT, blank = True, null = True)
+    user = models.ForeignKey(User, on_delete=models.PROTECT) #誰做這個專題的
+    proposal = models.ForeignKey(Proposal, on_delete=models.PROTECT, blank = True, null = True)
     name = models.CharField(max_length = 30) #專題名稱
     report = models.FileField(upload_to = "Report/", default=None)#報告書電子檔
     poster = models.ImageField(upload_to = "Poster/", default=None)#海報或發表證明
@@ -86,7 +90,7 @@ class Project(models.Model):
              (2, '系統及演算法開發',))
     field = models.IntegerField(choices=FIELD, default=0)
 
-    postDate = models.DateField(default = timezone.now, blank=True, null = True)#學位考試日期
+    postDate = models.DateField(blank=True, null = True)#學位考試日期
     letter = models.FileField(upload_to='Uploaded Files/', blank=True, null=True, default=None)#同意函
 
     TYPE = ((0, '大學部'),
@@ -100,7 +104,13 @@ class Project(models.Model):
     post = models.PositiveIntegerField(choices=POST, default = 0, blank=True, null = True)
     seminarDate = models.DateTimeField(blank=True, null = True)#研討會或期刊發行日期
     seminarName = models.CharField(max_length=20, blank=True, null = True)#研討會或期刊名稱
-    journalNumber = models.DecimalField(max_digits = 10, decimal_places = 0, blank=True, null = True)#期刊刊號
+    journalNumber = models.DecimalField(max_digits = 10, decimal_places = 0, blank=True, null = True)#
+    
+    STATE = ((0, '專題'),
+             (1, '已申請'),
+             (2, '已取消'),)
+    state = models.IntegerField(choices=STATE, default = 0)
+    cancelapplication = models.FileField(upload_to='Cancel/', blank=True, null=True, default=None)
 
     class Meta:
         ordering = ["user"]
@@ -128,6 +138,9 @@ class Year(models.Model):
 
     def __str__(self):
         return str(self.year)
+    
+    class Meta:
+        ordering = ['year']
 
 class Booking(models.Model):
     user = models.ForeignKey(User, null = True, on_delete=models.PROTECT)

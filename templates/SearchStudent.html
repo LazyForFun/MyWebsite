@@ -34,7 +34,7 @@
                     <td>{{ student.get_graduate_year }}</td>
                     <td>{{ student.get_identity_display }}</td>
                     <td><a href="{% url 'ModifyStudentInfo' pk=student.id%}" class="btn btn-primary">編輯</a></td>
-                    <td><a href="{% url 'DeleteStudent' pk=student.id%}" class="btn btn-danger">編輯</a></td>
+                    <td><a href="{% url 'DeleteStudent' pk=student.id%}" class="btn btn-danger">刪除</a></td>
                 </tr>
             {% endfor %}
         </tbody>

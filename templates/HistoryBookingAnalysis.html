@@ -8,9 +8,9 @@
     <form method="POST">
         {% csrf_token %}
         借閱年份:
-        <input type="search" name="bookingYear" placeholder="">
+        <input type="search" name="bookingYear" placeholder="" style="width: 100px;">
         學年度:
-        <input type="search" name="graduateYear" placeholder="">
+        <input type="search" name="graduateYear" placeholder="" style="width: 100px;">
         學制:
         <select type="Select" name="type">
             <option></option>
@@ -27,7 +27,8 @@
             <option value = '1' {% if field == '1' %}selected{% endif %}>網路及多媒體應用</option>
             <option value = '2' {% if field == '2' %}selected{% endif %}>系統及演算法開發</option>
         </select>
-        <input type="submit"class="btn btn-primary" value="篩選">
+        <input type="submit" class="btn btn-primary" name="filt" value="篩選">
+        <input type="submit" class="btn btn-primary" name="draw" value="分析圖">
     </form>
 
     <div class="container">

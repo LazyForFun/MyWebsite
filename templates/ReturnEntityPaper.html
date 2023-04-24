@@ -1,12 +1,12 @@
 {% extends 'layout.html' %}
 
-{% block title %}領取報告書{% endblock %}
+{% block title %}歸還報告書{% endblock %}
 
 {% block content %}
     <div class="container"><br>
         <form method="POST" action="" id="barCodeForm">
             {% csrf_token %}
-            承辦人(輸入帳號):<input type="text" name="underTaker" id="underTaker" class = "form-control"></br>
+            承辦人(輸入姓名):<input type="text" name="underTaker" id="underTaker" class = "form-control"></br>
             掃描報告書條碼:<input type="text" name="barCode" id="barCode" class="form-control"></br>
             <input type="submit" class="btn btn-primary" value="領取"></input><br><hr>
         </form>

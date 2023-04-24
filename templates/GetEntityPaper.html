@@ -24,7 +24,7 @@
     <div class="container">
         已借閱的書籍：<br>
         {% for booking in booking %}
-            {{ booking.paper.name }}<br>
+            {{ booking.paper.project.name }}<br>
         {% endfor %}
     </div>
 

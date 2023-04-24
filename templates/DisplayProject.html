@@ -5,8 +5,8 @@
 
 <form method = 'POST'>
     {% csrf_token %}
-    姓名:<input type = "search" name = "username" placeholder = "">
-    指導教授:<input type = "search" name = "professor" placeholder = "">
+    姓名:<input type = "search" name = "username" placeholder = "" style="width: 150px;">
+    指導教授:<input type = "search" name = "professor" placeholder = "" style="width: 150px;">
     畢業年份:<input type = "search" name = "graduateLevel" placeholder="">
     學制:
     <select class = "select" name = "type">
@@ -24,6 +24,7 @@
     </select>
     <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
     <input type="submit" class="btn btn-primary" name = "export" value="匯出" />
+    <input type="submit" class="btn btn-primary" name = "download" value="全部下載" />
 </form>
     <div class="container">
         <table class="table">
@@ -31,6 +32,7 @@
                 <tr>
                     <th scope="col">姓名</th>
                     <th scope="col">學號</th>
+                    <th scope="col">學制</th>
                     <th scope="col">指導教授</th>
                     <th scope="col">畢業級</th>
                     <th scope="col">專題名稱</th>
@@ -42,6 +44,7 @@
                     <tr>
                         <td>{{ project.user.name }}</td>
                         <td>{{ project.user.username }}</td>
+                        <td>{{ project.get_type_display }}</td>
                         <td>{{ project.professor }}</td>
                         <td>{{ project.user.get_graduate_year }}</td>
                         <td><a href="{{ project.report.url }}" target="_blank">{{ project.name }}</a></td>

@@ -59,7 +59,7 @@ class ProposalModelForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'professor': forms.TextInput(attrs={'class': 'form-control'}),
             'type':forms.Select(attrs={'class': 'form-control'}),
-            'postDate':forms.DateInput(attrs={'class': 'form-control'}),
+            'postDate':forms.DateInput(attrs={'class': 'form-control', 'placeholder':'YYYY-MM-DD', 'default':''}),
         }
         labels = {
             'name':'論文名稱',
@@ -67,34 +67,38 @@ class ProposalModelForm(forms.ModelForm):
             'type':'學制',
             'postDate':'計畫發表日期',
         }
+        placeholder = {
+            'postDate':'YYYY-MM-DD',
+        }
     
 class FinalModelForm(forms.ModelForm):
 
     class Meta:
         model = Project
         fields = ['user', 'proposal', 'name', 'professor', 'type', 'postDate', 'poster', 'letter',
-                  'post', 'seminarName', 'seminarDate', 'journalNumber']
+                  'post', 'seminarName', 'seminarDate', 'journalNumber', 'state']
         widgets = {
             'user':forms.HiddenInput(),
             'proposal':forms.HiddenInput(),
+            'state':forms.HiddenInput(),
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'professor': forms.TextInput(attrs={'class': 'form-control'}),
             'type': forms.Select(attrs={'class': 'form-control'}),
-            'postDate': forms.DateInput(attrs={'class': 'form-control'}),
+            'postDate': forms.DateInput(attrs={'class': 'form-control', 'placeholder':'YYYY-MM-DD'}),
             'poster': forms.FileInput(attrs={'class': 'form-control'}),
             'letter': forms.FileInput(attrs={'class': 'form-control'}),
             'post': forms.Select(attrs={'class': 'form-control'}),
             'seminarName': forms.TextInput(attrs={'class': 'form-control'}),
-            'seminarDate': forms.DateInput(attrs={'class': 'form-control'}),
+            'seminarDate': forms.DateInput(attrs={'class': 'form-control', 'placeholder':'YYYY-MM-DD'}),
             'journalNumber': forms.NumberInput(attrs={'class': 'form-control'}),
         }
         labels = {
             'name': '論文名稱',
             'professor': '指導教授',
             'postDate':'學位考試日期',
-            'type': '日碩/職碩',
-            'poster':'論文發表證明拍照/截圖',
-            'letter':'同意函/接受函',
+            'type': '請選擇學制',
+            'poster':'研討會/期刊論文發表證明拍照/截圖',
+            'letter':'研討會/期刊同意函/接受函',
             'post':'請選擇研討會/期刊',
             'seminarName':'研討會/期刊名稱(請填全名)',
             'seminarDate':'研討會/期刊發行日期',
@@ -123,20 +127,18 @@ class LicenseAuditForm(forms.ModelForm):
 
     class Meta:
         model = License
-        fields = ['name', 'level', 'acqDate', 'organizer', 'pazz',]
+        fields = ['name', 'level', 'acqDate', 'organizer',]
         widgets = {
             'name':forms.TextInput(attrs={'class': 'form-control', 'style':'width : 300px;'}),
             'level':forms.Select(attrs={'class': 'form-control', 'style':'width : 300px'}),
             'acqDate':forms.DateInput(attrs={'class': 'form-control', 'style':'width : 300px'}),
             'organizer':forms.TextInput(attrs={'class': 'form-control', 'style':'width : 300px'}),
-            'pazz':forms.Select(attrs={'class': 'form-control', 'style':'width : 300px'}),
         }
         labels = {
             'name': '證照名稱(請填全名)',
             'level': '證照級別',
             'acqDate': '取得日期',
             'organizer': '主辦單位',
-            'pazz': '審核',
         }
 
 class UserEditForm(forms.ModelForm):

@@ -53,8 +53,10 @@ urlpatterns = [
     path('EditProject/<int:pk>', views.EditProject.as_view(), name='EditProject'),
     path('DeleteLicense/<int:pk>', views.DeleteLicense.as_view(), name='DeleteLicense'),
     #碩士端
-    path('PassProposal/<int:pk>', views.PassProposal.as_view(), name='PassProposal'), #論文
-    path('PassFinal/<int:pk>', views.PassFinal.as_view(), name='PassFinal'),
+    path('PassProposal/<int:pk>', views.PassProposal.as_view(), name='PassProposal'), #計畫發表
+    path('PassFinal/<int:pk>', views.PassFinal.as_view(), name='PassFinal'),#學位考試
+    path('UserProposalAndFinal/<int:pk>', views.UserProposalAndFinal.as_view(), name='UserProposalAndFinal'),
+    path('UploadCanCel', views.UploadCancel.as_view(), name="UploadCancel"),
     #學生共用
     path('BorrowPaper/<int:pk>', views.BorrowPaper.as_view(), name='BorrowPaper'),
     path('MakeBooking/<int:pk>', views.BorrowPaper.MakeBooking, name='MakeBooking'),#借用表單

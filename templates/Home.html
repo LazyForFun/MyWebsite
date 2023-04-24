@@ -11,9 +11,12 @@
             {% endif %}
         </p>
     </div>
-    <div class="container"  align="center">
-        <a href="{% url 'GetEntityPaper' %}" class="btn btn-primary">領取報告書</a>
-        <a href="{% url 'ReturnEntityPaper' %}" class="btn btn-primary">歸還報告書</a>
-        <a href="{% url 'login' %}" class="btn btn-primary">登入</a>
+    <div class="container"  align="center" style="display: flex;">
+        <div style="flex: 1;">
+            <a href="{% url 'ReturnEntityPaper' %}" class="btn btn-primary" style="font-size: xx-large;">歸還報告書</a>
+        </div>
+        <div style="flex: 1;">
+            <a href="{% url 'login' %}" class="btn btn-primary" style="font-size: xx-large;">登入</a>
+        </div>
     </div>
 {% endblock %}

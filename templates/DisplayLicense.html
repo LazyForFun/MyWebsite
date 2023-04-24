@@ -7,19 +7,23 @@
     {% csrf_token %}
     姓名:<input type = "search" name = "name" placeholder = "">
     學號:<input type = "search" name = "username" placeholder = "">
+    入學年:<input type = "search" name = "graduateLevel" placeholder = "">
     級別:
     <select class = "select" name = "level">
+        <option></option>
         <option value = 'A' {% if level == 'A' %} selected="selected" {% endif %}>A</option>
         <option value = 'B' {% if level == 'B' %} selected="selected" {% endif %}>B</option>
     </select> 
     審核:
     <select class = "select" name = "pazz">
+        <option></option>
         <option value = 0 {% if pazz == 0 %}selected{% endif %}>審核中</option>
         <option value = 1 {% if pazz == 1 %}selected{% endif %}>通過</option>
         <option value = 2 {% if pazz == 2 %}selected{% endif %}>未通過</option>
     </select>
     <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
     <input type="submit" class="btn btn-primary" name = "export" value="匯出" />
+    <input type="submit" class="btn btn-primary" name = "download" value="全部下載" />
 </form>
     <div class="container">
         <table class="table">

@@ -4,12 +4,11 @@ from django.views import View
 from django.views.generic.list import ListView
 from django.views.generic.edit import DeleteView, UpdateView, CreateView
 
-from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib import auth, messages
 from django.contrib.auth.hashers import make_password, check_password
 from django.conf import settings 
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, FileResponse
 
 from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -18,13 +17,23 @@ from django.core.mail import EmailMessage, send_mail
 
 from django.db.models.functions import ExtractYear
 
-import os, csv, datetime, re
+import os, csv, datetime, re, io, zipfile
 import pandas as pd
 import django.utils.timezone as timezone
 from django.utils.http import urlquote
 from django.utils.crypto import get_random_string
 from django.utils import dateformat, formats
 from datetime import timedelta
+
+from reportlab.graphics.shapes import Drawing, String
+from reportlab.graphics.charts.barcharts import VerticalBarChart
+from reportlab.graphics.charts.piecharts import Pie
+from reportlab.graphics.widgets import markers
+from reportlab.graphics import renderPDF
+from reportlab.pdfgen import canvas
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+
 
 from .forms import ProjectModelForm, LicenseModelForm, ProposalModelForm, LicenseEditForm, LicenseAuditForm, FinalModelForm
 from .models import User, Project,License, Proposal, Booking, Paper, Year
@@ -35,7 +44,7 @@ from . import forms
 # Create your views here.
 
 limit = 10 #分頁器單個頁面的資料數
-pattern = r'^(u\d{8}|csshare[0-9]+)$' #可使用的帳號格式
+pattern = r'^(U\d{8}|G\d{8}|M\d{8}|csshare[0-9]+)$' #可使用的帳號格式
 
 class Home(View):
 
@@ -56,8 +65,9 @@ class Signin(View):
             messages.info(request, "使用者已存在!!")
             return redirect(reverse('Signin'))
         else:
-            if re.match(pattern, getValue['username']):
-                user = User.objects.create(name = getValue['name'], username = getValue['username'], password = make_password(getValue['password']), email = getValue['mail'], graduateLevel = int(getValue['graduateLevel']) + 1911, identity = getValue['identity'])
+            new_username = getValue['username'].upper()
+            if re.match(pattern, new_username):
+                user = User.objects.create(name = getValue['name'], username = new_username, password = make_password(getValue['password']), email = getValue['mail'], graduateLevel = int(getValue['graduateLevel']) + 1911, identity = getValue['identity'], department = getValue['department'])
                 user.save()
                 messages.success(request, "註冊成功!!")
                 return redirect(reverse('login'))
@@ -154,11 +164,34 @@ class UserLicense(View):
         }
 
         return render(request, 'UserLicense.html', context)
+    
+class UserProposalAndFinal(View):
+    
+    def get(self, request, pk):
+        proposal = Proposal.objects.filter(user = request.user.id)
+        final = Project.objects.filter(user = request.user.id)
+        context = {
+            'proposal': proposal,
+            'final': final,
+        }
+
+        return render(request, 'UserProposalAndFinal.html', context)
+    
+class UploadCancel(View):
+    def get(self, request):
+        return render(request, 'UploadCancel.html')
+    def post(self, request):
+        project = Project.objects.get(user = request.user.id)
+        project.state = 2
+        project.cancelapplication = self.request.POST['cancelApplication']
+        project.save()
+
+        return redirect(reverse('UserProposalAndFinal', kwargs={'pk': self.request.user.id}))
 
 class PassProject(LoginRequiredMixin, CreateView):
 
     def get(self, request, pk):
-        form = ProjectModelForm(initial={'user': request.user.id, 'type': 0})
+        form = ProjectModelForm(initial={'user': pk, 'type': 0})
         context = {
             'form': form,
         }
@@ -170,11 +203,8 @@ class PassProject(LoginRequiredMixin, CreateView):
             form.save()
             data = Project.objects.get(user=self.kwargs['pk'])
             user = User.objects.get(id=self.kwargs['pk'])
-            barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'A'
+            barCode = str(user.graduateLevel-1911)+'-'+ user.username
             paper = Paper.objects.create(project = data, barCode = barCode)
-            paper.save()
-            barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'B'
-            paper = Paper.objects.create(project = data, barCode=barCode)
             paper.save()
             messages.success(request, "繳交成功")
             return redirect(reverse('PassProject', kwargs={'pk': self.request.user.id}))
@@ -214,8 +244,7 @@ class PassLicense(LoginRequiredMixin, View):
 class PassProposal(LoginRequiredMixin, View):
 
     def get(self, request, pk):
-        user = User.objects.get(id = pk)
-        form = ProposalModelForm(initial={'user': user.id})
+        form = ProposalModelForm(initial={'user': self.request.user.id})
         context = {
             'form': form,
         }
@@ -223,6 +252,14 @@ class PassProposal(LoginRequiredMixin, View):
         return render(request, 'PassProposal.html', context)
     
     def post(self, request, pk):
+        try:
+            proposal = Proposal.objects.get(user = pk)
+        except Proposal.DoesNotExist:
+            proposal = None
+        if proposal:
+            messages.success(request, "請勿重複繳交!!")
+            return redirect(reverse('PassProposal', kwargs={'pk':pk}))
+        
         form = ProposalModelForm(request.POST)
         if form.is_valid():
             form.save()
@@ -243,7 +280,7 @@ class PassFinal(LoginRequiredMixin, View):
         except Proposal.DoesNotExist:
             proposal = None
         if proposal:
-            form = FinalModelForm(initial={'user':pk, 'proposal': proposal.id, 'professor':proposal.professor, 'name':proposal.name}) 
+            form = FinalModelForm(initial={'user':pk, 'proposal': proposal.id, 'professor':proposal.professor, 'name':proposal.name, 'type':proposal.type, 'state':1}) 
         else:
             form = FinalModelForm()
             messages.success(request, "你還沒繳交論文計畫!!")
@@ -254,6 +291,14 @@ class PassFinal(LoginRequiredMixin, View):
     
     def post(self, request, pk):
         form = FinalModelForm(request.POST, request.FILES)
+        try:
+            project = Project.objects.get(user = pk, state = 1)
+        except Project.DoesNotExist:
+            project = None
+        if project:
+            messages.success(request, "請勿重複繳交!!")
+            return redirect(reverse('PassFinal', kwargs={'pk':pk}))
+        
         if form.is_valid():
             form.save()
             proposal = Proposal.objects.get(user = pk)
@@ -263,18 +308,15 @@ class PassFinal(LoginRequiredMixin, View):
                 form.save()
                 data = Project.objects.get(user=self.kwargs['pk'])
                 user = User.objects.get(id=self.kwargs['pk'])
-                barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'A'
+                barCode = str(user.graduateLevel-1911)+'-'+ user.username
                 paper = Paper.objects.create(project = data, barCode = barCode)
-                paper.save()
-                barCode = str(user.graduateLevel-1911)+'-'+ user.username +'-'+'B'
-                paper = Paper.objects.create(project = data, barCode=barCode)
                 paper.save()
 
                 messages.success(request, "繳交成功!!")
                 return redirect(reverse('PassFinal', kwargs={'pk':pk}))
             else:
                 project.delete()
-                messages.success(request, "學位考試與計畫發表日期應相差3個月以上!!")
+                messages.success(request, "學位考試與計畫發表日期須相差3個月以上!!")
         context = {
             'form':form
         }
@@ -334,7 +376,7 @@ class BorrowPaper(ListView):
                 year = Year.objects.create(year = (int(timezone.now().year) - 1911))
                 year.save()
             booking = Booking.objects.create(user=request.user, paper = paper, bookingDate = timezone.now(), year = year)
-            messages.success(request, "借閱成功!!!")
+            messages.success(request, "預約成功，請至資訊科學系辦公室借用!!!")
             #send_mail('新的報告書預約', request.user.name + "在" + booking.bookingTime + "預約了 " + booking.paper.name, 'ling900101@gmail.com', ['csshare'], fail_silently=False)
             booking.save()
             
@@ -356,6 +398,10 @@ class GetEntityPaper(View):
 
         try:
             paper = Paper.objects.get(barCode = request.POST['barCode'])
+        except Paper.DoesNotExist:
+            messages.success(request, "無效的條碼...")
+            return render(request, 'GetEntityPaper.html')
+        try:
             changeBookingState=Booking.objects.get(paper = paper.id, state = 0)
         except Booking.DoesNotExist:
             changeBookingState=None
@@ -386,7 +432,7 @@ class ReturnEntityPaper(View):
 
         if booking:
             booking.state = 2
-            booking.underTaker = User.objects.get(username = getValue['underTaker']).name
+            booking.underTaker = getValue['underTaker']
             booking.save()
             messages.success(request, "歸還成功!")
         else:
@@ -452,15 +498,19 @@ class DisplayLicense(LoginRequiredMixin, View):
         getValue = self.request.POST
         if getValue:
             if 'name' in getValue:
-                queryDict['user__name'] = getValue['name']
+                queryDict['user__name__icontains'] = getValue['name']
             if 'username' in getValue:
-                queryDict['user__username'] = getValue['username']
+                queryDict['user__username__icontains'] = getValue['username']
+            if 'graduateLevel' in getValue and getValue['graduateLevel'] != '':
+                queryDict['user__graduateLevel'] = int(getValue['graduateLevel']) + 1911
             if 'level' in getValue and getValue['level'] != '':
                 queryDict['level'] = getValue['level']
             if 'pazz' in getValue and getValue['pazz'] != '':
                 queryDict['pazz'] = getValue['pazz']
+        else:
+            license = License.objects.all()
 
-        if "export" in request.POST:
+        if "export" in getValue:
             license = License.objects.filter(**queryDict).values_list('user__name','user__username' , 'name','level', 'acqDate')
             response = HttpResponse(content_type='text/csv')
             response.charset = 'utf-8-sig'
@@ -473,7 +523,7 @@ class DisplayLicense(LoginRequiredMixin, View):
             for license in license:
                 writer.writerow(license)
             return response
-        else:
+        elif 'search' in getValue:
             license = License.objects.filter(**queryDict)
             
             paginator=Paginator(license, limit)
@@ -490,7 +540,22 @@ class DisplayLicense(LoginRequiredMixin, View):
                 'license': license,
             }
 
-        return render(request, 'DisplayLicense.html', context)
+            return render(request, 'DisplayLicense.html', context)
+
+        '''elif 'download' in getValue:
+            license = License.objects.filter(**queryDict)
+            
+            zf = zipfile.ZipFile('證照証明截圖.zip', 'w')
+            
+            for i in license:
+                filename = i.filename
+                zf.write('/media/image/' + filename)
+            zf.close()
+
+            with open('證照証明截圖.zip', 'rb') as f:
+                response = HttpResponse(f.read(), content_type='application/zip')
+                response['Content-Disposition'] = 'attachment; filename="證照証明截圖.zip"'
+            return response'''
     
 
 class DisplayProject(LoginRequiredMixin, ListView):
@@ -714,46 +779,204 @@ class HistoryBookingAnalysis(LoginRequiredMixin, View):
         return render(request, 'HistoryBookingAnalysis.html')
     
     def post(self, request):
-        queryDict={}
+        queryDict = {}
+        drawDict = {}
         getValue = self.request.POST
         if getValue:
             if 'bookingYear' in getValue and getValue['bookingYear'] != '':
                 queryDict['year__year'] = int(getValue['bookingYear'])
             if 'graduateYear' in getValue and getValue['graduateYear'] != '':
-                queryDict['user__graduateLevel'] = int(getValue['graduateYear']) + 1911
+                queryDict['paper__project__user__graduateLevel'] = int(getValue['graduateYear']) + 1911
             if 'type' in getValue and getValue['type'] != '':
                 queryDict['paper__project__type'] = int(getValue['type'])
+                drawDict['paper__project__type'] = int(getValue['type'])
             if 'name' in getValue:
                 queryDict['paper__project__name__icontains'] = getValue['name']
             if 'field' in getValue and getValue['field'] != '':
-                queryDict['paper__project__field'] = getValue['field']
+                queryDict['paper__project__field'] = int(getValue['field'])
+                drawDict['paper__project__field'] = int(getValue['field'])
 
         booking = Booking.objects.filter(**queryDict).values_list('paper__project__name').distinct
         paper = Paper.objects.filter(project__name__in = booking())
-        if getValue['bookingYear'] != '':
-            for i in paper:
-                i.lendTimes = Booking.objects.filter(year__year = int(getValue['bookingYear']), paper = i).count()
-                i.save()
-        else:
-            for i in paper:
-                i.lendTimes = Booking.objects.filter(paper = i).count()
-                i.save()
+        for i in paper:
+            i.lendTimes = Booking.objects.filter(paper = i, **queryDict).count()
+            i.save()
 
-        paginator=Paginator(paper, limit)
+        '''分隔篩選資料與畫圖'''
 
-        page=self.request.GET.get('page')
+        if 'draw' in getValue:
+            drawingTitleLine1 = Drawing(200, 100)
+            drawingTitleLine2 = Drawing(200, 100)
+            
+            buffer = io.BytesIO()
+            pdf = canvas.Canvas(buffer)
+            pdfmetrics.registerFont(TTFont("SimSun", "SimSun.ttf"))
+
+            titleType = ''
+            if getValue['type'] == '0':
+                titleType = '大學部'
+            elif getValue['type'] == '1':
+                titleType = '日間碩士班'
+            elif getValue['type'] == '2':
+                titleType = '碩士在職專班'
+            titleField = ''
+            if getValue['field'] == '0':
+                titleField = '軟體開發及程式設計'
+            elif getValue['field'] == '1':
+                titleField = '網路及多媒體應用'
+            elif getValue['field'] == '2':
+                titleField = '系統及演算法開發'
+            titleLine1 = String(50, 50, str(getValue['bookingYear']) + "學年度" + titleType, fontName="SimSun", fontSize=25)
+            titleLine2 = String(50, 50, titleField + "借閱分析", fontName="SimSun", fontSize=25)
+            drawingTitleLine1.add(titleLine1)
+            drawingTitleLine2.add(titleLine2)
+            renderPDF.draw(drawingTitleLine1, pdf, 0, 700)
+            renderPDF.draw(drawingTitleLine2, pdf, 0, 670)
+            #設定標題
+
+            drawingPieChart1 = Drawing(400, 200)
+            drawingPieChart2 = Drawing(400, 200)
+
+            pc1 = Pie()
+            pc2 = Pie()
+            pc1.sideLabels = True
+            pc2.sideLabels = True
+            pc1.x = pc2.x = 65
+            pc1.y = pc2.y = 15
+            pc1.width = pc2.width = 150
+            pc1.height = pc2.height = 150
+            pc1.slices.fontSize = pc2.slices.fontSize = 16
+            pc1.slices.fontName = pc2.slices.fontName = 'SimSun'
+            #圓餅圖設定
+            if getValue['bookingYear'] == '':
+                BookingForSingalYear = []
+                BookingForAccumulate = []
+                category1 = []
+                category2 = []
+                years = Year.objects.all()
+                acc = 0
+                for year in years:
+                    count = Booking.objects.filter(year = year, **drawDict).count()
+                    BookingForSingalYear.append(count)
+                    acc += count
+                    BookingForAccumulate.append(acc)
+                    category1.append(str(year.year) + '(' + str(count) + '次)')
+                    category2.append(str(year.year) + '(' + str(acc) + '次)')
+
+                pc1.data = BookingForSingalYear
+                pc2.data = BookingForAccumulate
+                pc1.labels = category1
+                pc2.labels = category2
+                pc1.slices.fontSize = pc2.slices.fontSize = 18
+                pc1.slices.fontName = pc2.slices.fontName = 'SimSun'
+
+                drawingPieChart1.add(pc1)
+                drawingPieChart2.add(pc2)
+                renderPDF.draw(drawingPieChart1, pdf, 150, 500)
+                renderPDF.draw(drawingPieChart2, pdf, 150, 200)
+
+                drawingChartName1 = Drawing(400, 200)
+                drawingChartName2 = Drawing(400, 200)
+
+                chartName1 = String(50, 50, '各年份借閱次數', fontName="SimSun", fontSize=30)
+                chartName2 = String(50, 50, '歷年累計借閱次數', fontName="SimSun", fontSize=30)
+                drawingChartName1.add(chartName1)
+                drawingChartName2.add(chartName2)
+                renderPDF.draw(drawingChartName1, pdf, 125, 400)
+                renderPDF.draw(drawingChartName2, pdf, 125, 100)
+                
+            else:
+                if getValue['type'] == getValue['field'] == '':
+                    classByType = []
+                    classByField = []
+                    for type in range(3):
+                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__type = type).count()
+                        classByType.append(count)
+                    for field in range(3):
+                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__field = field).count()
+                        classByField.append(count)
+                    category1 = ['大學部(' + str(classByType[0]) + '次)', '日間碩士班(' + str(classByType[1]) + '次)', '在職碩士專班(' + str(classByType[2]) + '次)']
+                    category2 = ['軟體開發及程式設計(' + str(classByField[0]) + '次)', '網路及多媒體應用(' + str(classByField[1]) + '次)', '系統及演算法開發(' + str(classByField[2]) + '次)']
+
+                    pc1.data = classByType
+                    pc2.data = classByField
+                    pc1.labels = category1
+                    pc2.labels = category2
+
+                    drawingPieChart1.add(pc1)
+                    drawingPieChart2.add(pc2)
+                    renderPDF.draw(drawingPieChart1, pdf, 150, 500)
+                    renderPDF.draw(drawingPieChart2, pdf, 150, 200)
+
+                    drawingChartName1 = Drawing(400, 200)
+                    drawingChartName2 = Drawing(400, 200)
+
+                    chartName1 = String(50, 50, '以學制分類借閱次數', fontName="SimSun", fontSize=30)
+                    chartName2 = String(50, 50, '以領域分類借閱次數', fontName="SimSun", fontSize=30)
+                    drawingChartName1.add(chartName1)
+                    drawingChartName2.add(chartName2)
+                    renderPDF.draw(drawingChartName1, pdf, 125, 400)
+                    renderPDF.draw(drawingChartName2, pdf, 125, 100)
+                
+                elif getValue['type'] != '' and getValue['field'] == '':
+                    classByField = []
+                    for field in range(3):
+                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__field = field).count()
+                        classByField.append(count)
+                    category2 = ['軟體開發及程式設計(' + str(classByField[0]) + '次)', '網路及多媒體應用(' + str(classByField[1]) + '次)', '系統及演算法開發(' + str(classByField[2]) + '次)']
+
+                    pc2.data = classByField
+                    pc2.labels = category2
+
+                    drawingPieChart2.add(pc2)
+                    renderPDF.draw(drawingPieChart2, pdf, 150, 500)
+
+                    drawingChartName2 = Drawing(400, 200)
+
+                    chartName2 = String(50, 50, '以領域分類借閱次數', fontName="SimSun", fontSize=30)
+                    drawingChartName2.add(chartName2)
+                    renderPDF.draw(drawingChartName2, pdf, 100, 400)
+
+                elif getValue['type'] == '' and getValue['field'] != '':
+                    classByType = []
+                    for type in range(3):
+                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__type = type).count()
+                        classByType.append(count)
+                    category2 = ['大學部(' + str(classByType[0]) + '次)', '日間碩士班(' + str(classByType[1]) + '次)', '在職碩士專班(' + str(classByType[2]) + '次)']
+
+                    pc2.data = classByType
+                    pc2.labels = category2
+
+                    drawingPieChart2.add(pc2)
+                    renderPDF.draw(drawingPieChart2, pdf, 150, 500)
+
+                    drawingChartName2 = Drawing(400, 200)
+
+                    chartName2 = String(50, 50, '以學制分類借閱次數', fontName="SimSun", fontSize=30)
+                    drawingChartName2.add(chartName2)
+                    renderPDF.draw(drawingChartName2, pdf, 100, 400)
+                    
+            
+            pdf.save()
+            buffer.seek(0)
+            return FileResponse(buffer, as_attachment=True, filename="分析圖.pdf")
         
-        try:
-            paper=paginator.page(page)
-        except PageNotAnInteger:
-            paper=paginator.page(1)
-        except EmptyPage:
-            paper=paginator.page(paginator.num_pages)
+        else:
+            paginator=Paginator(paper, limit)
 
-        context = {
-            'paper': paper
-        }
-        return render(request, 'HistoryBookingAnalysis.html', context)
+            page=self.request.GET.get('page')
+        
+            try:
+                paper=paginator.page(page)
+            except PageNotAnInteger:
+                paper=paginator.page(1)
+            except EmptyPage:
+                paper=paginator.page(paginator.num_pages)
+
+            context = {
+                'paper': paper
+            }
+            return render(request, 'HistoryBookingAnalysis.html', context)
 
 class AuditLicense(LoginRequiredMixin, UpdateView):
     model = License
@@ -761,9 +984,16 @@ class AuditLicense(LoginRequiredMixin, UpdateView):
     
     form_class = LicenseAuditForm
 
-    template_name = 'EditLicense.html'
+    template_name = 'AuditLicense.html'
 
     def get_success_url(self):
+        if 'pazz' in self.request.POST:
+            self.object.pazz = 1
+            self.object.save()
+        elif 'fail' in self.request.POST:
+            self.object.pazz = 2
+            self.object.save()
+
         license = License.objects.filter(pazz=0)
         if license:
             pk = license.first().id
