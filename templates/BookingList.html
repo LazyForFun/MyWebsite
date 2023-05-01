@@ -29,6 +29,7 @@
                     <th scope="col">作者學籍</th>
                     <th scope="col">預約時間</th>
                     <th scope="col">借用時間</th>
+                    <th scope="col">承辦人</th>
                     <th scope="col">動作</th>
                 </tr>
             </thead>
@@ -43,6 +44,7 @@
                         <td>{{ booking.paper.project.get_type_display }}</td>
                         <td>{{ booking.bookingDate | date:'Y-m-d H:i' }}</td>
                         <td>{{ booking.takingDate | date:'Y-m-d H:i' }}</td>
+                        <td>{{ booking.underTaker }}</td>
                         {% if booking.state == 0 %}
                             <td><button class="btn btn-outline-primary">已預約</button></td>
                         {% elif booking.state == 1 %}

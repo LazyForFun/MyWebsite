@@ -7,7 +7,7 @@
     {% csrf_token %}
     姓名:<input type = "search" name = "name" placeholder = "">
     學號:<input type = "search" name = "username" placeholder = "">
-    畢業年份:<input type = "search" name = "graduateLevel" placeholder = "">
+    入學年:<input type = "search" name = "enrollYear" placeholder = "">
 
     <input type="submit" class="btn btn-primary" name="search" value="搜尋" />
 </form>
@@ -17,10 +17,10 @@
         <thead>
             <tr>
                 <th scope="col">姓名</th>
-                <th scope="col"></th>
                 <th scope="col">學號</th>
                 <th scope="col">email</th>
-                <th scope="col">畢業級</th>
+                <th scope="col">入學年</th>
+                <th scope="col">身份</th>
                 <th scope="col">編輯</th>
                 <th scope="col">刪除</th>
             </tr>
@@ -31,10 +31,12 @@
                     <td>{{ student.name }}</td>
                     <td>{{ student.username }}</td>
                     <td>{{ student.email }}</td>
-                    <td>{{ student.get_graduate_year }}</td>
+                    <td>{{ student.get_enrollYear }}</td>
                     <td>{{ student.get_identity_display }}</td>
                     <td><a href="{% url 'ModifyStudentInfo' pk=student.id%}" class="btn btn-primary">編輯</a></td>
-                    <td><a href="{% url 'DeleteStudent' pk=student.id%}" class="btn btn-danger">刪除</a></td>
+                    {% if not student.identity == 1 %}
+                        <td><a href="{% url 'DeleteStudent' pk=student.id%}" class="btn btn-danger">刪除</a></td>
+                    {% endif %}
                 </tr>
             {% endfor %}
         </tbody>

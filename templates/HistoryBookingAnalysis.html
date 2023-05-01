@@ -10,16 +10,16 @@
         借閱年份:
         <input type="search" name="bookingYear" placeholder="" style="width: 100px;">
         學年度:
-        <input type="search" name="graduateYear" placeholder="" style="width: 100px;">
+        <input type="search" name="enrollYear" placeholder="" style="width: 100px;">
         學制:
         <select type="Select" name="type">
             <option></option>
             <option value = '0' {% if field == '0' %}selected{% endif %}>大學部</option>
-            <option value = '1' {% if field == '1' %}selected{% endif %}>日間碩士班</option>
-            <option value = '2' {% if field == '2' %}selected{% endif %}>碩士在職專班</option>
+            <option value = '1' {% if field == '2' %}selected{% endif %}>日間碩士班</option>
+            <option value = '2' {% if field == '3' %}selected{% endif %}>碩士在職專班</option>
         </select>
         專題報告書名稱:
-        <input type="search" name="name" placeholder="">
+        <input type="search" name="name" placeholder="" style="width: 130px;">
         領域:
         <select type="Select" name="field">
             <option></option>

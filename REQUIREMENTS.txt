@@ -1,0 +1,7 @@
+django
+padnas
+pillow
+reportlab
+numpy
+django-import-export
+django-filter

@@ -16,7 +16,9 @@
             <a href="{% url 'ReturnEntityPaper' %}" class="btn btn-primary" style="font-size: xx-large;">歸還報告書</a>
         </div>
         <div style="flex: 1;">
-            <a href="{% url 'login' %}" class="btn btn-primary" style="font-size: xx-large;">登入</a>
+            {% if not user or not user.is_authenticated %}
+                <a href="{% url 'login' %}" class="btn btn-primary" style="font-size: xx-large;">登入</a>
+            {% endif %}
         </div>
     </div>
 {% endblock %}

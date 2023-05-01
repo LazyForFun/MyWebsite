@@ -21,11 +21,12 @@ class User(AbstractUser):
                   (1, '外系'),)
     department = models.IntegerField(choices=DEPARTMENT, null=True, blank=True)
 
-    IDENTITY=((0, '學士'),
+    IDENTITY=((0, '大學部'),
               (1, '管理員'),
-              (2, '碩士'))
+              (2, '日間碩士班'),
+              (3, '碩士在職專班'))
     identity = models.IntegerField(choices=IDENTITY, default=0)
-    graduateLevel = models.DecimalField(max_digits = 4, decimal_places = 0, default = timezone.now().year + 4)#畢業級
+    enrollYear = models.DecimalField(max_digits = 4, decimal_places = 0, default = timezone.now().year)#入學年
 
     USER_NAME_FIELD = 'username'
 
@@ -36,10 +37,10 @@ class User(AbstractUser):
         return self.username
 
     def not_graduated(self):
-        return self.graduateLevel + 2 >= timezone.now().year
+        return self.enrollYear + 6 >= timezone.now().year
 
-    def get_graduate_year(self):
-        return (self.graduateLevel - 1911)
+    def get_enrollYear(self):
+        return (self.enrollYear - 1911)
 
 class License(models.Model):
     user = models.ForeignKey(User, null = True, on_delete=models.PROTECT)
@@ -65,14 +66,14 @@ class License(models.Model):
         return self.name
 
 class Proposal(models.Model):
-    user = models.OneToOneField(User, null = True, on_delete=models.PROTECT)
+    user = models.ForeignKey(User, null = True, on_delete=models.PROTECT)
     name = models.CharField(max_length = 30) #論文名稱
     professor = models.CharField(max_length = 5)#指導教授
     postDate = models.DateField(blank=True, null = True)#發表日期
-    TYPE = ((1, '日間碩士班'),
-            (2, '碩士在職專班'),)
-    type = models.IntegerField(choices=TYPE, default=0)
-
+    STATE = ((0, '已申請'),
+             (1, '已取消'),)
+    state = models.IntegerField(choices=STATE, default = 0)
+    cancelapplication = models.FileField(upload_to='CancelProposal/', blank=True, null=True, default=None)
     
     def __str__(self):
         return self.name
@@ -93,11 +94,6 @@ class Project(models.Model):
     postDate = models.DateField(blank=True, null = True)#學位考試日期
     letter = models.FileField(upload_to='Uploaded Files/', blank=True, null=True, default=None)#同意函
 
-    TYPE = ((0, '大學部'),
-            (1, '日間碩士班'),
-            (2, '碩士在職專班'),)
-    type = models.IntegerField(choices=TYPE, default=0)
-
     #研討會或期刊
     POST = ((0, '研討會'),
             (1, '期刊'),)
@@ -110,7 +106,7 @@ class Project(models.Model):
              (1, '已申請'),
              (2, '已取消'),)
     state = models.IntegerField(choices=STATE, default = 0)
-    cancelapplication = models.FileField(upload_to='Cancel/', blank=True, null=True, default=None)
+    cancelapplication = models.FileField(upload_to='CancelFinal/', blank=True, null=True, default=None)
 
     class Meta:
         ordering = ["user"]
@@ -119,7 +115,7 @@ class Project(models.Model):
         return self.name
     
 class Paper(models.Model):
-    project = models.ForeignKey(Project, null = True, on_delete=models.PROTECT)
+    project = models.ForeignKey(Project, null = True, on_delete=models.CASCADE)
     barCode = models.CharField(max_length=20, null=True)
     lendTimes = models.IntegerField(default=0)
 
@@ -131,7 +127,7 @@ class Paper(models.Model):
         return self.lendTimes > 0
 
     class Meta:
-        ordering = ['barCode', 'project__type']
+        ordering = ['barCode', 'project__user__identity']
 
 class Year(models.Model):
     year = models.IntegerField(null = True, blank = True)

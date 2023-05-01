@@ -7,14 +7,7 @@
     {% csrf_token %}
     姓名:<input type = "search" name = "username" placeholder = "" style="width: 150px;">
     指導教授:<input type = "search" name = "professor" placeholder = "" style="width: 150px;">
-    畢業年份:<input type = "search" name = "graduateLevel" placeholder="">
-    學制:
-    <select class = "select" name = "type">
-        <option></option>
-        <option value = '0' {% if level == '0' %} selected="selected" {% endif %}>大學部</option>
-        <option value = '1' {% if level == '1' %} selected="selected" {% endif %}>日間碩士班</option>
-        <option value = '2' {% if level == '2' %} selected="selected" {% endif %}>碩士在職專班</option>
-    </select>
+    入學年:<input type = "search" name = "enrollYear" placeholder="">
     領域:
     <select class = "select" name = "field">
         <option></option>
@@ -34,7 +27,7 @@
                     <th scope="col">學號</th>
                     <th scope="col">學制</th>
                     <th scope="col">指導教授</th>
-                    <th scope="col">畢業級</th>
+                    <th scope="col">入學年</th>
                     <th scope="col">專題名稱</th>
                     <th scope="col">海報</th>
                 </tr>
@@ -44,9 +37,9 @@
                     <tr>
                         <td>{{ project.user.name }}</td>
                         <td>{{ project.user.username }}</td>
-                        <td>{{ project.get_type_display }}</td>
+                        <td>{{ project.user.get_identity_display }}</td>
                         <td>{{ project.professor }}</td>
-                        <td>{{ project.user.get_graduate_year }}</td>
+                        <td>{{ project.user.get_enrollYear }}</td>
                         <td><a href="{{ project.report.url }}" target="_blank">{{ project.name }}</a></td>
                         <td><a href="{{ project.poster.url }}" target="_blank">海報下載</a></td>
                     </tr>

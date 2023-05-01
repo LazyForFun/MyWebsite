@@ -14,6 +14,7 @@ from django.core.files.storage import FileSystemStorage
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.core.exceptions import ValidationError
 from django.core.mail import EmailMessage, send_mail
+from django.core.files.storage import default_storage
 
 from django.db.models.functions import ExtractYear
 
@@ -34,8 +35,10 @@ from reportlab.pdfgen import canvas
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 
+from itertools import chain
 
-from .forms import ProjectModelForm, LicenseModelForm, ProposalModelForm, LicenseEditForm, LicenseAuditForm, FinalModelForm
+
+from .forms import ProjectModelForm, LicenseModelForm, ProposalModelForm, LicenseEditForm, LicenseAuditForm, FinalModelForm, ProposalEditForm, FinalEditForm
 from .models import User, Project,License, Proposal, Booking, Paper, Year
 from . import forms
 #csshare.tw@gmail.com
@@ -67,7 +70,20 @@ class Signin(View):
         else:
             new_username = getValue['username'].upper()
             if re.match(pattern, new_username):
-                user = User.objects.create(name = getValue['name'], username = new_username, password = make_password(getValue['password']), email = getValue['mail'], graduateLevel = int(getValue['graduateLevel']) + 1911, identity = getValue['identity'], department = getValue['department'])
+                new_department = -1
+                new_identity = -1
+                if new_username[0] == 'U':
+                    new_identity = 0
+                elif new_username[0] == 'M':
+                    new_identity = 2
+                elif new_username[0] == 'G':
+                    new_identity = 3
+
+                if new_username[4:7] == '160':
+                    new_department = 0
+                else:
+                    new_department = 1
+                user = User.objects.create(name = getValue['name'], username = new_username, password = make_password(getValue['password']), email = getValue['mail'], enrollYear = int(new_username[1:4]) + 1911, identity = new_identity, department = new_department)
                 user.save()
                 messages.success(request, "註冊成功!!")
                 return redirect(reverse('login'))
@@ -105,7 +121,7 @@ class ForgetPassword(View):
     def post(self, request):
         getValue = self.request.POST
         try:
-            user = User.objects.get(username = getValue['username'], graduateLevel = int(getValue['graduateLevel']) + 1911, email = getValue['email'])
+            user = User.objects.get(username = getValue['username'], enrollYear = int(getValue['enrollYear']) + 1911, email = getValue['email'])
         except User.DoesNotExist:
             user = None
 
@@ -170,32 +186,51 @@ class UserProposalAndFinal(View):
     def get(self, request, pk):
         proposal = Proposal.objects.filter(user = request.user.id)
         final = Project.objects.filter(user = request.user.id)
+        editable = Project.objects.filter(user = request.user.id, state = 1)
         context = {
             'proposal': proposal,
             'final': final,
+            'editable': editable,
         }
 
         return render(request, 'UserProposalAndFinal.html', context)
     
 class UploadCancel(View):
-    def get(self, request):
+    def get(self, request, pk):
         return render(request, 'UploadCancel.html')
-    def post(self, request):
-        project = Project.objects.get(user = request.user.id)
-        project.state = 2
-        project.cancelapplication = self.request.POST['cancelApplication']
-        project.save()
+    def post(self, request, pk):
+        if pk == 'proposal':
+            proposal = Proposal.objects.get(user = request.user.id, state = 0)
+            proposal.state = 1
+            proposal.cancelapplication = self.request.POST['cancelApplication']
+            proposal.save()
+        
+        elif pk == 'final':
+            project = Project.objects.get(user = request.user.id, state = 1)
+            project.state = 2
+            project.cancelapplication = self.request.POST['cancelApplication']
+            paper = Paper.objects.get(project = project)
+            paper.delete()
+            project.save()
 
         return redirect(reverse('UserProposalAndFinal', kwargs={'pk': self.request.user.id}))
 
 class PassProject(LoginRequiredMixin, CreateView):
 
     def get(self, request, pk):
-        form = ProjectModelForm(initial={'user': pk, 'type': 0})
-        context = {
-            'form': form,
-        }
-        return render(request, 'PassProject.html', context)
+        try:
+            data = Project.objects.get(user=self.kwargs['pk'], state = 0)
+        except Project.DoesNotExist:
+            data = None
+        if data:
+            messages.success(request, "請勿重複繳交")
+            return render(request, 'Home.html')
+        else:
+            form = ProjectModelForm(initial={'user': pk})
+            context = {
+                'form': form,
+            }
+            return render(request, 'PassProject.html', context)
     
     def post(self, request, pk):
         form = ProjectModelForm(request.POST, request.FILES)
@@ -203,11 +238,11 @@ class PassProject(LoginRequiredMixin, CreateView):
             form.save()
             data = Project.objects.get(user=self.kwargs['pk'])
             user = User.objects.get(id=self.kwargs['pk'])
-            barCode = str(user.graduateLevel-1911)+'-'+ user.username
+            barCode = str(user.enrollYear-1908)+'-'+ user.username
             paper = Paper.objects.create(project = data, barCode = barCode)
             paper.save()
             messages.success(request, "繳交成功")
-            return redirect(reverse('PassProject', kwargs={'pk': self.request.user.id}))
+            return redirect(reverse('UserProject', kwargs={'pk': self.request.user.id}))
 
         context = {
             'form': form,
@@ -244,6 +279,15 @@ class PassLicense(LoginRequiredMixin, View):
 class PassProposal(LoginRequiredMixin, View):
 
     def get(self, request, pk):
+
+        try:
+            proposal = Proposal.objects.get(user = pk, state = 0)
+        except Proposal.DoesNotExist:
+            proposal = None
+        if proposal:
+            messages.success(request, "請勿重複繳交!!")
+            return redirect(reverse('UserProposalAndFinal', kwargs={'pk':pk}))
+        
         form = ProposalModelForm(initial={'user': self.request.user.id})
         context = {
             'form': form,
@@ -252,19 +296,12 @@ class PassProposal(LoginRequiredMixin, View):
         return render(request, 'PassProposal.html', context)
     
     def post(self, request, pk):
-        try:
-            proposal = Proposal.objects.get(user = pk)
-        except Proposal.DoesNotExist:
-            proposal = None
-        if proposal:
-            messages.success(request, "請勿重複繳交!!")
-            return redirect(reverse('PassProposal', kwargs={'pk':pk}))
         
         form = ProposalModelForm(request.POST)
         if form.is_valid():
             form.save()
             messages.success(request, "繳交成功!!")
-            return redirect(reverse('PassProposal', kwargs={'pk':pk}))
+            return redirect(reverse('UserProposalAndFinal', kwargs={'pk':pk}))
         
         context = {
             'form': form,
@@ -276,11 +313,18 @@ class PassFinal(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         try:
-            proposal = Proposal.objects.get(user = pk)
+            data = Project.objects.get(user = pk, state = 1)
+        except Project.DoesNotExist:
+            data = None
+        if data:
+            messages.success(request, "請勿重複繳交!!")
+            return redirect(reverse('UserProposalAndFinal', kwargs={'pk':pk}))
+        try:
+            proposal = Proposal.objects.get(user = pk, state = 0)
         except Proposal.DoesNotExist:
             proposal = None
         if proposal:
-            form = FinalModelForm(initial={'user':pk, 'proposal': proposal.id, 'professor':proposal.professor, 'name':proposal.name, 'type':proposal.type, 'state':1}) 
+            form = FinalModelForm(initial={'user':pk, 'proposal': proposal.id, 'professor':proposal.professor, 'name':proposal.name, 'state':1}) 
         else:
             form = FinalModelForm()
             messages.success(request, "你還沒繳交論文計畫!!")
@@ -291,29 +335,22 @@ class PassFinal(LoginRequiredMixin, View):
     
     def post(self, request, pk):
         form = FinalModelForm(request.POST, request.FILES)
-        try:
-            project = Project.objects.get(user = pk, state = 1)
-        except Project.DoesNotExist:
-            project = None
-        if project:
-            messages.success(request, "請勿重複繳交!!")
-            return redirect(reverse('PassFinal', kwargs={'pk':pk}))
         
         if form.is_valid():
             form.save()
-            proposal = Proposal.objects.get(user = pk)
-            project = Project.objects.get(proposal = proposal.id)
+            proposal = Proposal.objects.get(user = pk, state = 0)
+            project = Project.objects.get(proposal = proposal.id, state = 1)
             delta = project.postDate - proposal.postDate
             if delta > timedelta(days=92):
                 form.save()
-                data = Project.objects.get(user=self.kwargs['pk'])
+                data = Project.objects.get(user=self.kwargs['pk'], state = 1)
                 user = User.objects.get(id=self.kwargs['pk'])
-                barCode = str(user.graduateLevel-1911)+'-'+ user.username
+                barCode = str(user.enrollYear-1910)+'-'+ user.username
                 paper = Paper.objects.create(project = data, barCode = barCode)
                 paper.save()
 
                 messages.success(request, "繳交成功!!")
-                return redirect(reverse('PassFinal', kwargs={'pk':pk}))
+                return redirect(reverse('UserProposalAndFinal', kwargs={'pk':pk}))
             else:
                 project.delete()
                 messages.success(request, "學位考試與計畫發表日期須相差3個月以上!!")
@@ -333,9 +370,12 @@ class BorrowPaper(ListView):
             if 'name' in getValue:
                 queryDict['project__name__icontains'] = getValue['name']
             if 'type' in getValue and int(getValue['type']) >= 0:
-                queryDict['project__type'] = int(getValue['type'])
+                queryDict['project__user__identity'] = int(getValue['type'])
             if 'professor' in getValue:
                 queryDict['project__professor__icontains'] = getValue['professor']
+            if 'field' in getValue and int(getValue['field']) >= 0:
+                queryDict['project__field'] = int(getValue['field'])
+            
             paper = Paper.objects.filter(**queryDict)
         else:
             paper = Paper.objects.all()
@@ -501,8 +541,8 @@ class DisplayLicense(LoginRequiredMixin, View):
                 queryDict['user__name__icontains'] = getValue['name']
             if 'username' in getValue:
                 queryDict['user__username__icontains'] = getValue['username']
-            if 'graduateLevel' in getValue and getValue['graduateLevel'] != '':
-                queryDict['user__graduateLevel'] = int(getValue['graduateLevel']) + 1911
+            if 'enrollYear' in getValue and getValue['enrollYear'] != '':
+                queryDict['user__enrollYear'] = int(getValue['enrollYear']) + 1911
             if 'level' in getValue and getValue['level'] != '':
                 queryDict['level'] = getValue['level']
             if 'pazz' in getValue and getValue['pazz'] != '':
@@ -542,27 +582,35 @@ class DisplayLicense(LoginRequiredMixin, View):
 
             return render(request, 'DisplayLicense.html', context)
 
-        '''elif 'download' in getValue:
+        elif 'download' in getValue:
             license = License.objects.filter(**queryDict)
-            
-            zf = zipfile.ZipFile('證照証明截圖.zip', 'w')
-            
-            for i in license:
-                filename = i.filename
-                zf.write('/media/image/' + filename)
-            zf.close()
 
-            with open('證照証明截圖.zip', 'rb') as f:
-                response = HttpResponse(f.read(), content_type='application/zip')
-                response['Content-Disposition'] = 'attachment; filename="證照証明截圖.zip"'
-            return response'''
+            file_zip = io.BytesIO()
+            user_count = {}
+
+            with zipfile.ZipFile(file_zip, 'w') as zf:
+                for i in license:
+                    user_key = i.user.username + '-' + i.user.name
+                    if user_key in user_count:
+                        user_count[user_key] += 1
+                    else:
+                        user_count[user_key] = 1
+                    image_data = default_storage.open(i.image.name, 'rb').read()
+                    filename = user_key + '-' + str(user_count[user_key]) + '.jpg'
+                    zf.writestr(filename, image_data)
+
+            file_zip.seek(0)
+            response = HttpResponse(content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename="證照証明截圖.zip"'
+            response.write(file_zip.read())
+            return response
     
 
 class DisplayProject(LoginRequiredMixin, ListView):
         
     def get(self, request):
         
-        project = Project.objects.all()
+        project = Project.objects.filter(state = 0)
 
         paginator=Paginator(project, limit)
 
@@ -587,30 +635,28 @@ class DisplayProject(LoginRequiredMixin, ListView):
         if getValue:
             if 'username' in getValue:
                 queryDict['user__name__icontains'] = getValue['username']
-            if 'graduateLevel' in getValue and getValue['graduateLevel'] != '':
-                queryDict['user__graduateLevel'] = int(getValue['graduateLevel']) + 1911
+            if 'enrollYear' in getValue and getValue['enrollYear'] != '':
+                queryDict['user__enrollYear'] = int(getValue['enrollYear']) + 1911
             if 'professor' in getValue:
                 queryDict['professor__icontains'] = getValue['professor']
-            if 'type' in getValue and getValue['type'] != '':
-                queryDict['type'] = getValue['type']
             if 'field' in getValue and getValue['field'] != '':
                 queryDict['field'] = getValue['field']
         
-        if "export" in request.POST:
-            project = Project.objects.filter(**queryDict).values_list('user__name','user__username', 'professor', 'name', 'type', 'field')
+        if "export" in getValue:
+            project = Project.objects.filter(**queryDict, user__identity = 0).values_list('user__name','user__username', 'professor', 'name', 'field')
             response = HttpResponse(content_type='text/csv')
             response.charset = 'utf-8-sig'
             response['Content-Disposition'] = 'attachment; filename="%s"'%(urlquote("專題紀錄.csv"))         
             writer = csv.writer(response)       
                 
         
-            writer.writerow(['姓名','學號','指導教授','報告書題目', '學制', '領域'])
+            writer.writerow(['姓名','學號','指導教授','報告書題目', '領域'])
         
             for project in project:
                 writer.writerow(project)
             return response
-        else:
-            project = Project.objects.filter(**queryDict)
+        elif 'search' in getValue:
+            project = Project.objects.filter(**queryDict, state = 0)
             
             paginator=Paginator(project, limit)
 
@@ -628,7 +674,211 @@ class DisplayProject(LoginRequiredMixin, ListView):
             }
             
             return render(request, 'DisplayProject.html', context)
+        
+        elif 'download' in getValue:
+            project = Project.objects.filter(**queryDict)
+            
+            file_zip = io.BytesIO()
 
+            with zipfile.ZipFile(file_zip, 'w') as zf:
+                for i in project:
+                    poster_data = default_storage.open(i.poster.name, 'rb').read()
+                    zf.writestr(i.user.username + '.jpg', poster_data)
+
+            file_zip.seek(0)
+            response = HttpResponse(content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename="專題海報.zip"'
+            response.write(file_zip.read())
+            return response
+
+class DisplayProposal(LoginRequiredMixin, ListView):
+        
+    def get(self, request):
+        
+        proposal = Proposal.objects.all()
+
+        paginator=Paginator(proposal, limit)
+
+        page=request.GET.get('page')
+        
+        try:
+            proposal=paginator.page(page)
+        except PageNotAnInteger:
+            proposal=paginator.page(1)
+        except EmptyPage:
+            proposal=paginator.page(paginator.num_pages)
+
+        context = {
+            'proposal': proposal,
+        }
+
+        return render(request, 'DisplayProposal.html', context)
+
+    def post(self, request):
+        queryDict = {}
+        getValue = self.request.POST
+        if getValue:
+            if 'username' in getValue:
+                queryDict['user__name__icontains'] = getValue['username']
+            if 'enrollYear' in getValue and getValue['enrollYear'] != '':
+                queryDict['user__enrollYear'] = int(getValue['enrollYear']) + 1911
+            if 'professor' in getValue:
+                queryDict['professor__icontains'] = getValue['professor']
+            if 'type' in getValue and getValue['type'] != '':
+                queryDict['user__identity'] = getValue['type']
+            if 'field' in getValue and getValue['field'] != '':
+                queryDict['field'] = getValue['field']
+        
+        if "export" in getValue:
+            proposal = Proposal.objects.filter(**queryDict).values_list('user__name','user__username', 'professor', 'name')
+            response = HttpResponse(content_type='text/csv')
+            response.charset = 'utf-8-sig'
+            response['Content-Disposition'] = 'attachment; filename="%s"'%(urlquote("計畫發表紀錄.csv"))         
+            writer = csv.writer(response)       
+                
+        
+            writer.writerow(['姓名','學號','指導教授','計畫發表題目', '學制'])
+        
+            for proposal in proposal:
+                writer.writerow(proposal)
+            return response
+        elif 'search' in getValue:
+            proposal = Proposal.objects.filter(**queryDict)
+            
+            paginator=Paginator(proposal, limit)
+
+            page=request.GET.get('page')
+        
+            try:
+                proposal=paginator.page(page)
+            except PageNotAnInteger:
+                proposal=paginator.page(1)
+            except EmptyPage:
+                proposal=paginator.page(paginator.num_pages)
+            
+            context = {
+                'proposal': proposal,
+            }
+            
+            return render(request, 'DisplayProposal.html', context)
+        
+        elif 'download' in getValue:
+            proposal = Proposal.objects.filter(**queryDict, state = 1)
+            
+            file_zip = io.BytesIO()
+            user_count = {}
+
+            with zipfile.ZipFile(file_zip, 'w') as zf:
+                for i in proposal:
+                    user_key = i.user.username + '-' + i.user.name
+                    if user_key in user_count:
+                        user_count[user_key] += 1
+                    else:
+                        user_count[user_key] = 1
+                    image_data = default_storage.open(i.cancelapplication.name, 'rb').read()
+                    filename = user_key + '-' + str(user_count[user_key]) + '.jpg'
+                    zf.writestr(filename, image_data)
+
+            file_zip.seek(0)
+            response = HttpResponse(content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename="計畫發表取消表.zip"'
+            response.write(file_zip.read())
+            return response
+        
+class DisplayFinal(LoginRequiredMixin, ListView):
+        
+    def get(self, request):
+        
+        project = Project.objects.exclude(state = 0)
+
+        paginator=Paginator(project, limit)
+
+        page=request.GET.get('page')
+        
+        try:
+            project=paginator.page(page)
+        except PageNotAnInteger:
+            project=paginator.page(1)
+        except EmptyPage:
+            project=paginator.page(paginator.num_pages)
+
+        context = {
+            'project': project,
+        }
+
+        return render(request, 'DisplayFinal.html', context)
+
+    def post(self, request):
+        queryDict = {}
+        getValue = self.request.POST
+        if getValue:
+            if 'username' in getValue:
+                queryDict['user__name__icontains'] = getValue['username']
+            if 'enrollYear' in getValue and getValue['enrollYear'] != '':
+                queryDict['user__enrollYear'] = int(getValue['enrollYear']) + 1911
+            if 'professor' in getValue:
+                queryDict['professor__icontains'] = getValue['professor']
+            if 'type' in getValue and getValue['type'] != '':
+                queryDict['user__identity'] = getValue['type']
+            if 'field' in getValue and getValue['field'] != '':
+                queryDict['field'] = getValue['field']
+        
+        if "export" in getValue:
+            project = Project.objects.filter(**queryDict).exclude(state = 0).values_list('user__name','user__username', 'professor', 'name')
+            response = HttpResponse(content_type='text/csv')
+            response.charset = 'utf-8-sig'
+            response['Content-Disposition'] = 'attachment; filename="%s"'%(urlquote("學位考試紀錄.csv"))         
+            writer = csv.writer(response)       
+                
+        
+            writer.writerow(['姓名','學號','指導教授','計畫發表題目', '學制'])
+        
+            for project in project:
+                writer.writerow(project)
+            return response
+        elif 'search' in getValue:
+            project = Project.objects.filter(**queryDict).exclude(state = 0)
+            
+            paginator=Paginator(project, limit)
+
+            page=request.GET.get('page')
+        
+            try:
+                project=paginator.page(page)
+            except PageNotAnInteger:
+                project=paginator.page(1)
+            except EmptyPage:
+                project=paginator.page(paginator.num_pages)
+            
+            context = {
+                'project': project,
+            }
+            
+            return render(request, 'DisplayFinal.html', context)
+        
+        elif 'download' in getValue:
+            project = Project.objects.filter(**queryDict, state = 2)
+            
+            file_zip = io.BytesIO()
+            user_count = {}
+
+            with zipfile.ZipFile(file_zip, 'w') as zf:
+                for i in project:
+                    user_key = i.user.username + '-' + i.user.name
+                    if user_key in user_count:
+                        user_count[user_key] += 1
+                    else:
+                        user_count[user_key] = 1
+                    image_data = default_storage.open(i.cancelapplication.name, 'rb').read()
+                    filename = user_key + '-' + str(user_count[user_key]) + '.jpg'
+                    zf.writestr(filename, image_data)
+
+            file_zip.seek(0)
+            response = HttpResponse(content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename="學位考試取消表.zip"'
+            response.write(file_zip.read())
+            return response
+        
 class ImportAndExport(LoginRequiredMixin, View):
     
     def get(self, request):
@@ -645,7 +895,6 @@ class ImportAndExport(LoginRequiredMixin, View):
                     dbframe = exceldata
                     for dbframe in dbframe.itertuples():
                         obj = User.objects.create(username=dbframe.username,password=make_password(dbframe.password), name=dbframe.name,)
-                        print(type(obj))
                         obj.save()
 
                     messages.success(request, "新增成功!")
@@ -665,8 +914,9 @@ class ImportAndExport(LoginRequiredMixin, View):
             if user:
                 messages.success(request, "已存在的使用者!!")
             else:
+                new_enrollYear = int(getValue['username'][1:4])
                 if re.match(pattern, getValue['username']):
-                    user = User.objects.create(username=getValue['username'], password = make_password(getValue['password']), name=getValue['name'], graduateLevel=int(getValue['graduateLevel'])+1911, email = getValue['email'])
+                    user = User.objects.create(username=getValue['username'], password = make_password(getValue['password']), name=getValue['name'], enrollYear=new_enrollYear+1911, email = getValue['email'])
                     user.save()
                     messages.success(request, "新增成功!")
                 else:
@@ -687,8 +937,8 @@ class SearchStudent(LoginRequiredMixin, ListView):
                 queryDict['name__icontains'] = self.request.GET['name']
             if "username" in self.request.GET:
                 queryDict['username__icontains'] = self.request.GET['username']
-            if 'graduateLevel' in self.request.GET and self.request.GET['graduateLevel'] != '':
-                queryDict['graduateLevel'] = int(self.request.GET['graduateLevel']) + 1911
+            if 'enrollYear' in self.request.GET and self.request.GET['enrollYear'] != '':
+                queryDict['enrollYear'] = int(self.request.GET['enrollYear']) + 1911
             queryset = User.objects.filter(**queryDict)
         else:
             queryset = User.objects.all()
@@ -727,9 +977,7 @@ class ModifyStudentInfo(LoginRequiredMixin, UpdateView):
                 student.username = getValue['username']
             if not check_password(getValue['password'], student.password) and getValue['password'] != "":
                 student.password = make_password(getValue['password'])
-            if int(getValue['graduateLevel']) + 1911 >= timezone.now().year:
-                student.graduateLevel = int(getValue['graduateLevel']) + 1911
-
+            student.identity = getValue['identity']
             student.save()
 
         return redirect(reverse('SearchStudent'))
@@ -786,10 +1034,10 @@ class HistoryBookingAnalysis(LoginRequiredMixin, View):
             if 'bookingYear' in getValue and getValue['bookingYear'] != '':
                 queryDict['year__year'] = int(getValue['bookingYear'])
             if 'graduateYear' in getValue and getValue['graduateYear'] != '':
-                queryDict['paper__project__user__graduateLevel'] = int(getValue['graduateYear']) + 1911
+                queryDict['paper__project__user__enrollYear'] = int(getValue['enrollYear']) + 1911
             if 'type' in getValue and getValue['type'] != '':
-                queryDict['paper__project__type'] = int(getValue['type'])
-                drawDict['paper__project__type'] = int(getValue['type'])
+                queryDict['paper__project__user__identity'] = int(getValue['type'])
+                drawDict['paper__project__user__identity'] = int(getValue['type'])
             if 'name' in getValue:
                 queryDict['paper__project__name__icontains'] = getValue['name']
             if 'field' in getValue and getValue['field'] != '':
@@ -890,7 +1138,7 @@ class HistoryBookingAnalysis(LoginRequiredMixin, View):
                     classByType = []
                     classByField = []
                     for type in range(3):
-                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__type = type).count()
+                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__user__identity = type).count()
                         classByType.append(count)
                     for field in range(3):
                         count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__field = field).count()
@@ -940,7 +1188,7 @@ class HistoryBookingAnalysis(LoginRequiredMixin, View):
                 elif getValue['type'] == '' and getValue['field'] != '':
                     classByType = []
                     for type in range(3):
-                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__type = type).count()
+                        count = Booking.objects.filter(year__year = getValue['bookingYear'], paper__project__user__identity = type).count()
                         classByType.append(count)
                     category2 = ['大學部(' + str(classByType[0]) + '次)', '日間碩士班(' + str(classByType[1]) + '次)', '在職碩士專班(' + str(classByType[2]) + '次)']
 
@@ -1023,12 +1271,33 @@ class EditProject(LoginRequiredMixin, UpdateView):
     def get_success_url(self):
         return reverse('UserProject', kwargs={'pk':self.request.user.id})
     
+class EditProposal(LoginRequiredMixin, UpdateView):
+    model = Proposal
+    fileds = '__all__'
+    
+    form_class = ProposalEditForm
+
+    template_name = 'EditProposal.html'
+
+    def get_success_url(self):
+        return reverse('UserProposalAndFinal', kwargs={'pk':self.request.user.id})
+    
+class EditFinal(LoginRequiredMixin, UpdateView):
+    model = Project
+    fileds = '__all__'
+    
+    form_class = FinalEditForm
+
+    template_name = 'EditFinal.html'
+
+    def get_success_url(self):
+        return reverse('UserProposalAndFinal', kwargs={'pk':self.request.user.id})
+    
 class DeleteLicense(LoginRequiredMixin, DeleteView):
     model = License
     fileds = '__all__'
 
     template_name = 'DeleteLicense.html'
-
 
     def get_success_url(self):
         return reverse('UserLicense', kwargs={'pk':self.request.user.id})

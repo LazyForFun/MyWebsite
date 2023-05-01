@@ -4,16 +4,23 @@
 {% block content %}
 <form method = "GET">
     {% csrf_token %}
-    作者:<input type = "search" name = "author" placeholder = "">
-    專題報告書名稱:<input type = "search" name = "name" placeholder = "">
-    指導教授:<input type = "search" name = "professor" placeholder = "">
-    類型:
+    作者:<input type = "search" name = "author" placeholder = "" style="width: 100px;">
+    專題報告書/論文名稱:<input type = "search" name = "name" placeholder = "">
+    指導教授:<input type = "search" name = "professor" placeholder = "" style="width: 100px;">
+    學制:
     <select class = "select" name = "type">
         <option value = -1></option>
         <option value = 0 {% if type == 0 %} selected="selected" {% endif %}>大學部</option>
-        <option value = 1 {% if type == 1 %} selected="selected" {% endif %}>日間碩士班</option>
-        <option value = 2 {% if type == 2 %} selected="selected" {% endif %}>碩士在職專班</option>
+        <option value = 2 {% if type == 1 %} selected="selected" {% endif %}>日間碩士班</option>
+        <option value = 3 {% if type == 2 %} selected="selected" {% endif %}>碩士在職專班</option>
     </select> 
+    領域:
+    <select type="Select" name="field">
+        <option value = -1></option>
+        <option value = '0' {% if field == '0' %}selected{% endif %}>軟體開發及程式設計</option>
+        <option value = '1' {% if field == '1' %}selected{% endif %}>網路及多媒體應用</option>
+        <option value = '2' {% if field == '2' %}selected{% endif %}>系統及演算法開發</option>
+    </select>
     
     <input type="submit" class="btn btn-primary" name = "search" value="篩選" />
 </form>
@@ -23,10 +30,11 @@
             <thead>
                 <tr>
                     <th scope="col">作者</th>
-                    <th scope="col">報告書名稱</th>
+                    <th scope="col">專題報告書/論文名稱</th>
                     <th scope="col">學制</th>
                     <th scope="col">編碼</th>
                     <th scope="col">指導教授</th>
+                    <th scope="col">領域</th>
                     <th scope="col">預約</th>
                 </tr>
             </thead>
@@ -35,9 +43,10 @@
                     <tr>
                         <td>{{ paper.project.user.name }}</td>
                         <td>{{ paper.project.name }}</td>
-                        <td>{{ paper.project.get_type_display }}</td>
+                        <td>{{ paper.project.user.get_identity_display }}</td>
                         <td>{{ paper.barCode }}</td>
                         <td>{{ paper.project.professor }}</td>
+                        <td>{{ paper.project.get_field_display }}</td>
                         <td><a href="{% url 'MakeBooking' pk=paper.id %}" class="btn btn-primary">預約</a></td>
                     </tr>
                 {% endfor %}

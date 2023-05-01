@@ -1,6 +1,6 @@
 {% extends 'layout.html' %}
 
-{% block title %}歸還報告書{% endblock %}
+{% block title %}歸還專題報告書/論文{% endblock %}
 
 {% block content %}
     <div class="container"><br>
@@ -8,7 +8,7 @@
             {% csrf_token %}
             承辦人(輸入姓名):<input type="text" name="underTaker" id="underTaker" class = "form-control"></br>
             掃描報告書條碼:<input type="text" name="barCode" id="barCode" class="form-control"></br>
-            <input type="submit" class="btn btn-primary" value="領取"></input><br><hr>
+            <input type="submit" class="btn btn-primary" value="歸還"></input><br><hr>
         </form>
         <script>
             const barCodeInput = document.getElementById('barCode');

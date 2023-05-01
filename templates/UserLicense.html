@@ -17,14 +17,15 @@
                     <td>{{ license.name }}</td>
                     <td>{{ license.level }}</td>
                     <td>{{ license.acqDate }}</td>
-                    <td>{{ license.get_pazz_display }}</td>
-                    <td>
-                        {% if license.pazz == 0 %}
-                            <a href="{% url 'EditLicense' pk=license.id %}" class="btn btn-primary">編輯</a>
-                        {% elif license.pazz == 2 %}
-                            <a href="{% url 'DeleteLicense' pk=license.id %}" class="btn btn-danger">刪除</a>
-                        {% endif %}
-                    </td>
+                    {% if license.pazz == 0 %}
+                    <td><button class="btn btn-outline-primary">審核中</td>
+                        <td><a href="{% url 'EditLicense' pk=license.id %}" class="btn btn-primary">編輯</a></td>
+                    {% elif license.pazz == 2 %}
+                        <td><button class="btn btn-danger">未通過</td>
+                        <td><a href="{% url 'DeleteLicense' pk=license.id %}" class="btn btn-danger">刪除</a></td>
+                    {% else %}
+                        <td><button class="btn btn-primary">通過</td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

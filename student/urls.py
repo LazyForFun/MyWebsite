@@ -37,31 +37,35 @@ urlpatterns = [
     path('ImportAndExport', views.ImportAndExport.as_view(), name = 'ImportAndExport'),#匯入匯出
     #path('CheckLicense', views.CheckLicense.as_view(), name='CheckLicense'),#證照瀏覽
     path('DisplayLicense', views.DisplayLicense.as_view(), name='DisplayLicense'),#證照瀏覽
-    path('DisplayProject', views.DisplayProject.as_view(), name='DisplayProject'),#專題瀏覽
+    path('DisplayProject', views.DisplayProject.as_view(), name='DisplayProject'),#報告書瀏覽
+    path('DisplayProposal', views.DisplayProposal.as_view(), name='DisplayProposal'),#計畫發表瀏覽
+    path('DisplayFinal', views.DisplayFinal.as_view(), name='DisplayFinal'),#學位考試瀏覽
     path('AuditLicense/<int:pk>', views.AuditLicense.as_view(), name='AuditLicense'),#審核
     path('SearchStudent', views.SearchStudent.as_view(), name='SearchStudent'),#尋找特定學生
     path('ModifyStudentInfo/<int:pk>', views.ModifyStudentInfo.as_view(), name='ModifyStudentInfo'),#修改學生資料
-    path('DeleteStudentInfo/<int:pk>', views.ModifyStudentInfo.deleteStudent, name='DeleteStudent'),
+    path('DeleteStudentInfo/<int:pk>', views.ModifyStudentInfo.deleteStudent, name='DeleteStudent'),#刪除使用者
     path('BookingList', views.BookingList.as_view(), name='BookingList'),#借用申請表
-    path('HistoryBookingAnalysis', views.HistoryBookingAnalysis.as_view(), name='HistoryBookingAnalysis'),
-    #學士端
-    path('PassProject/<int:pk>', views.PassProject.as_view(), name='PassProject'), #專題
-    path('PassLicense/<int:pk>', views.PassLicense.as_view(), name='PassLicense'), #證照
-    path('UserProject/<int:pk>', views.UserProject.as_view(), name='UserProject'),
-    path('UserLicense/<int:pk>', views.UserLicense.as_view(), name='UserLicense'),
-    path('EditLicense/<int:pk>', views.EditLicense.as_view(), name='EditLicense'),
-    path('EditProject/<int:pk>', views.EditProject.as_view(), name='EditProject'),
-    path('DeleteLicense/<int:pk>', views.DeleteLicense.as_view(), name='DeleteLicense'),
-    #碩士端
+    path('HistoryBookingAnalysis', views.HistoryBookingAnalysis.as_view(), name='HistoryBookingAnalysis'),#歷史借閱分析
+    #學士
+    path('PassProject/<int:pk>', views.PassProject.as_view(), name='PassProject'), #專題繳交
+    path('PassLicense/<int:pk>', views.PassLicense.as_view(), name='PassLicense'), #證照繳交
+    path('UserProject/<int:pk>', views.UserProject.as_view(), name='UserProject'),#已繳交的專題
+    path('UserLicense/<int:pk>', views.UserLicense.as_view(), name='UserLicense'),#已繳交的證照
+    path('EditLicense/<int:pk>', views.EditLicense.as_view(), name='EditLicense'),#編輯證照
+    path('EditProject/<int:pk>', views.EditProject.as_view(), name='EditProject'),#編輯專題
+    path('DeleteLicense/<int:pk>', views.DeleteLicense.as_view(), name='DeleteLicense'),#刪除已繳交的證照
+    #碩士
     path('PassProposal/<int:pk>', views.PassProposal.as_view(), name='PassProposal'), #計畫發表
+    path('EditProposal/<int:pk>', views.EditProposal.as_view(), name='EditProposal'),#編輯已繳交的計畫發表
     path('PassFinal/<int:pk>', views.PassFinal.as_view(), name='PassFinal'),#學位考試
-    path('UserProposalAndFinal/<int:pk>', views.UserProposalAndFinal.as_view(), name='UserProposalAndFinal'),
-    path('UploadCanCel', views.UploadCancel.as_view(), name="UploadCancel"),
+    path('EditFinal/<int:pk>', views.EditFinal.as_view(), name='EditFinal'),#編輯已繳交的學位考試
+    path('UserProposalAndFinal/<int:pk>', views.UserProposalAndFinal.as_view(), name='UserProposalAndFinal'),#已繳交的計畫發表與學位考試歷程
+    path('UploadCancel/<str:pk>', views.UploadCancel.as_view(), name="UploadCancel"),#取消申請表上傳
     #學生共用
-    path('BorrowPaper/<int:pk>', views.BorrowPaper.as_view(), name='BorrowPaper'),
+    path('BorrowPaper/<int:pk>', views.BorrowPaper.as_view(), name='BorrowPaper'),#報告書列表
     path('MakeBooking/<int:pk>', views.BorrowPaper.MakeBooking, name='MakeBooking'),#借用表單
-    path('UserBooking/<int:pk>', views.UserBooking.as_view(), name='UserBooking'),#預約清單
-    path('DeleteBooking/<int:pk>', views.UserBooking.deleteBooking, name='DeleteBooking'),
+    path('UserBooking/<int:pk>', views.UserBooking.as_view(), name='UserBooking'),#已預約清單
+    path('DeleteBooking/<int:pk>', views.UserBooking.deleteBooking, name='DeleteBooking'),#刪除預約
    
 ]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

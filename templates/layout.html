@@ -1,90 +1,143 @@
-<!DOCTYPE>
-<html lan = "en" dir = "ltr">
-    <head>
-        <meta charset = "utf-8">
-         <!-- Bootstrap CSS -->
-         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0-beta1/dist/css/bootstrap.rtl.min.css" integrity="sha384-dc2NSrAXbAkjrdm9IYrX10fQq9SDG6Vjz7nQVKdKcJl3pC+k37e7qJR5MVSCS+wR" crossorigin="anonymous">
-        <title>資科系系務</title>
-    </head>
-    
-    <body>
-    <header class="p-3 text-bg-secondary">
-    <div class="container">
-      <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start" style="display: flex;font-size:large;">
-        <p style="flex: 1;">
-            {% load static %}
-            <img src="{% static '/images/logo.jpg'%}" width="225px" height = "100px">
-        </p>
-        <p style="flex: 1;">
-            <ul class="nav col-12 col-md-auto mb-2 justify-content-center mb-md-0">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>資科系</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <a class="navbar-brand" href="#">
+            {%load static %}
+            <img src="{% static 'images/logo.jpg' %}" width="180" height="80" alt="">
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav mr-auto">
                 {% if user and user.is_authenticated %}
-                    {% if user.identity == 0 %}
-                        {% if user.department == 0 %}
-                            {% if user.not_graduated %}
-                                <li><a href="{% url 'PassProject' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">專題繳交</a></li>
-                                <li><a href="{% url 'PassLicense' pk=user.id %}" class="nav-link px-2 text-black btn btn-warning">證照登錄</a></li>
-                            {% endif %}
-                            <li><a href="{% url 'UserProject' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">我的專題</a></li>
-                            <li><a href="{% url 'UserLicense' pk=user.id %}" class="nav-link px-2 text-black btn btn-warning">我的證照</a></li>
+                    {% if user.department == 0 %}
+                        {% if user.identity == 1 %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    資料總覽
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'DisplayLicense' %}">證照總覽</a>
+                                    <a class="dropdown-item" href="{% url 'DisplayProject' %}">專題總覽</a>
+                                    <a class="dropdown-item" href="{% url 'DisplayProposal' %}">計畫發表總覽</a>
+                                    <a class="dropdown-item" href="{% url 'DisplayFinal' %}">學位考試總覽</a>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    學生相關
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'ImportAndExport' %}">新增學生</a>
+                                    <a class="dropdown-item" href="{% url 'SearchStudent' %}">修改學生資料</a>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    借閱相關
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'BookingList' %}">借閱申請</a>
+                                    <a class="dropdown-item" href="{% url 'HistoryBookingAnalysis' %}">借閱分析</a>
+                                </div>
+                            </li>
+                        {% elif user.identity == 0 %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    資料上傳
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'PassLicense' pk=user.id %}">證照登錄</a>
+                                    <a class="dropdown-item" href="{% url 'PassProject' pk=user.id %}">專題報告書繳交</a>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    已上傳的資料
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'UserLicense' pk=user.id %}">證照</a>
+                                    <a class="dropdown-item" href="{% url 'UserProject' pk=user.id %}">專題報告書</a>
+                                </div>
+                            </li>
+                        {% else %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    資料上傳
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'PassProposal' pk=user.id %}">計畫發表登錄</a>
+                                    <a class="dropdown-item" href="{% url 'PassFinal' pk=user.id %}">學位考試登錄</a>
+                                </div>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    已上傳的資料
+                                </a>
+                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                    <a class="dropdown-item" href="{% url 'UserProposalAndFinal' pk=user.id %}">計畫發表與學位考試</a>
+                                </div>
+                            </li>
                         {% endif %}
-                        <li><a href="{% url 'BorrowPaper' pk=user.id%}" class="nav-link px-2 text-black btn btn-info">預約借用報告書</a></li>
-                        <li><a href="{% url 'UserBooking' pk=user.id%}" class="nav-link px-2 text-black btn btn-warning">我的預約</a></li>
-                        <li><a href="{% url 'GetEntityPaper' %}" class="nav-link px-2 text-black btn btn-info">領取報告書</a></li>
-                    {% elif user.identity == 1 %}
-                        <li><a href="{% url 'DisplayLicense' %}" class="nav-link px-2 text-black btn btn-info">證照總覽</a></li>
-                        <li><a href="{% url 'DisplayProject' %}" class="nav-link px-2 text-black btn btn-warning">專題總覽</a></li>
-                        <li><a href="{% url 'ImportAndExport' %}" class="nav-link px-2 text-black btn btn-info">新增學生</a>
-                        <li><a href="{% url 'SearchStudent' %}" class="nav-link px-2 text-black btn btn-warning">修改學生資料</a></li>
-                        <li><a href="{% url 'BookingList' %}" class="nav-link px-2 text-black btn btn-info">借閱申請</a></li>
-                        <li><a href="{% url 'HistoryBookingAnalysis' %}" class="nav-link px-2 text-black btn btn-warning">歷年借閱分析</a></li>
-                    {% else %}
-                        <li><a href="{% url 'PassProposal' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">計畫發表登錄</a></li>
-                        <li><a href="{% url 'PassFinal' pk=user.id %}" class="nav-link px-2 text-black btn btn-warning">學位考試登錄</a></li>
-                        <li><a href="{% url 'UserProposalAndFinal' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">我的論文</a></li>
-                        <li><a href="{% url 'BorrowPaper' pk=user.id %}" class="nav-link px-2 text-black btn btn-warning">預約報告書</a></li>
-                        <li><a href="{% url 'UserBooking' pk=user.id %}" class="nav-link px-2 text-black btn btn-info">我的預約</a></li>
-                        <li><a href="{% url 'GetEntityPaper' %}" class="nav-link px-2 text-black btn btn-warning">領取報告書</a></li>
                     {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'BorrowPaper' pk=user.id %}">預約借閱</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'UserBooking' pk=user.id %}">預約紀錄</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'GetEntityPaper' %}">領取專題報告書/論文</a>
+                    </li>
                 {% else %}
-                    <li><a href="{% url 'Home' %}" class="nav-link px-2 text-black btn btn-info">首頁</a></li>
+                    <a class="nav-link" href="#" style="font-size: x-large;">資訊科學系 學生資料登錄系統</a>
                 {% endif %}
             </ul>
-        </p>
 
-        <p style="flex: 1;">
-            {% if user.is_authenticated %}
-                <div class="col-md-3 text-end">
-                    <form method = "post" action = "{% url 'login' %}">{% csrf_token %}
-                        <a href="{% url 'EditPassword' pk=user.id %}" class="btn btn-danger me-2">{{ user.name }}</a>
-                        <a href="{% url 'logout' %}" class="btn btn-danger me-2">登出</a>
-                    </form>
-                </div>
-            {% else %}
-                <div class="col-md-3 text-end">
-                    <a href="{% url 'login' %}" class="btn btn-warning me-2">登入</a>
-                </div>
-            {% endif %}
-        </p>
-      </div>
+            <ul class="navbar-nav">
+                {% if user.is_authenticated %}
+                <li class="nav-item">
+                    <a href="{% url 'EditPassword' pk=user.id %}" class="nav-link">{{ user.name }}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'logout' %}">登出Logout</a>
+                </li>
+                {% else %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'login' %}" style="font-size: x-large;">登入Login</a>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>{% block title %}{% endblock %}</h1>
     </div>
-  </header>
-       
-        <div class="container">
-            <h1>{% block title %}{% endblock %}</h1>
-        </div>
-        <div class="container">
-            {% block content %}{% endblock %}
-        </div>
-        {% if messages %}
-            {% for message in messages %}
-                <script>
-                    alert('{{ message }}');
-                </script>
-            {% endfor %}
-        {% endif %}
-        <br><br>    
-        <div class="container" align="center">
-            臺北市立大學 資訊科學系(含碩士班)　版權所有 © 2023   University of Taipei Department of Computer Science. All Rights Reserved
-        </div>
-    </body>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+    {% if messages %}
+        {% for message in messages %}
+            <script>
+                alert('{{ message }}');
+            </script>
+        {% endfor %}
+    {% endif %}
+    <br><br>    
+    <div class="container" align="center">
+        臺北市立大學 資訊科學系(含碩士班)　版權所有 © 2023   University of Taipei Department of Computer Science. All Rights Reserved
+    </div>
+</body>
 </html>
