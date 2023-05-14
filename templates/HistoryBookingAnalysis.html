@@ -46,8 +46,8 @@
                 {% for paper in paper %}
                     {% if paper.checkPaperBorrowed %}
                     <tr>
-                        <td>{{ paper.project.user.get_graduate_year }}</td>
-                        <td>{{ paper.project.get_type_display }}</td>
+                        <td>{{ paper.project.user.get_enrollYear }}</td>
+                        <td>{{ paper.project.user.get_identity_display }}</td>
                         <td>{{ paper.project.name }}</td>
                         <td>{{ paper.barCode }}</td>
                         <td>{{ paper.project.get_field_display }}</td>

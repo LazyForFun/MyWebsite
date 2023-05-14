@@ -24,7 +24,7 @@ from django.contrib import staticfiles
 
 urlpatterns = [
     #首頁標籤
-    path('', views.Home.as_view(), name='Home'),
+    path('License-pass', views.Home.as_view(), name='Home'),
     path('GetEntityPaper', views.GetEntityPaper.as_view(), name='GetEntityPaper'),
     path('ReturnEntityPaper', views.ReturnEntityPaper.as_view(), name='ReturnEntityPaper'),
     #登入、登出、個人資訊
@@ -46,6 +46,7 @@ urlpatterns = [
     path('DeleteStudentInfo/<int:pk>', views.ModifyStudentInfo.deleteStudent, name='DeleteStudent'),#刪除使用者
     path('BookingList', views.BookingList.as_view(), name='BookingList'),#借用申請表
     path('HistoryBookingAnalysis', views.HistoryBookingAnalysis.as_view(), name='HistoryBookingAnalysis'),#歷史借閱分析
+    path('HistoryPaperUpdate', views.HistoryPaperUpdate.as_view(), name='HistoryPaperUpdate'),#補回歷年報告書
     #學士
     path('PassProject/<int:pk>', views.PassProject.as_view(), name='PassProject'), #專題繳交
     path('PassLicense/<int:pk>', views.PassLicense.as_view(), name='PassLicense'), #證照繳交
@@ -67,6 +68,4 @@ urlpatterns = [
     path('UserBooking/<int:pk>', views.UserBooking.as_view(), name='UserBooking'),#已預約清單
     path('DeleteBooking/<int:pk>', views.UserBooking.deleteBooking, name='DeleteBooking'),#刪除預約
    
-]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-urlpatterns += staticfiles_urlpatterns()
+]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

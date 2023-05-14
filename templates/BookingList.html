@@ -41,7 +41,7 @@
                         <td>{{ booking.paper.barCode }}</td>
                         <td>{{ booking.paper.project.user.name }}</td>
                         <td>{{ booking.paper.project.professor }}</td>
-                        <td>{{ booking.paper.project.get_type_display }}</td>
+                        <td>{{ booking.paper.project.user.get_identity_display }}</td>
                         <td>{{ booking.bookingDate | date:'Y-m-d H:i' }}</td>
                         <td>{{ booking.takingDate | date:'Y-m-d H:i' }}</td>
                         <td>{{ booking.underTaker }}</td>

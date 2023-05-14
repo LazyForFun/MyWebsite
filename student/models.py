@@ -100,7 +100,7 @@ class Project(models.Model):
     post = models.PositiveIntegerField(choices=POST, default = 0, blank=True, null = True)
     seminarDate = models.DateTimeField(blank=True, null = True)#研討會或期刊發行日期
     seminarName = models.CharField(max_length=20, blank=True, null = True)#研討會或期刊名稱
-    journalNumber = models.DecimalField(max_digits = 10, decimal_places = 0, blank=True, null = True)#
+    journalNumber = models.DecimalField(max_digits = 10, decimal_places = 0, blank=True, null = True)#期刊刊號
     
     STATE = ((0, '專題'),
              (1, '已申請'),

@@ -40,8 +40,14 @@
                         <td>{{ project.user.get_identity_display }}</td>
                         <td>{{ project.professor }}</td>
                         <td>{{ project.user.get_enrollYear }}</td>
-                        <td><a href="{{ project.report.url }}" target="_blank">{{ project.name }}</a></td>
-                        <td><a href="{{ project.poster.url }}" target="_blank">海報下載</a></td>
+                        {% if project.report %}
+                            <td><a href="{{ project.report.url }}" target="_blank">{{ project.name }}</a></td>
+                        {% else %}
+                            <td>{{ project.name }}</td>
+                        {% endif %}
+                        {% if project.poster %}
+                            <td><a href="{{ project.poster.url }}" target="_blank">海報下載</a></td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>

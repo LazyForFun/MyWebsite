@@ -74,9 +74,9 @@ class Signin(View):
                 new_identity = -1
                 if new_username[0] == 'U':
                     new_identity = 0
-                elif new_username[0] == 'M':
-                    new_identity = 2
                 elif new_username[0] == 'G':
+                    new_identity = 2
+                elif new_username[0] == 'M':
                     new_identity = 3
 
                 if new_username[4:7] == '160':
@@ -328,6 +328,7 @@ class PassFinal(LoginRequiredMixin, View):
         else:
             form = FinalModelForm()
             messages.success(request, "你還沒繳交論文計畫!!")
+            return redirect(reverse('PassProposal', kwargs={'pk':pk}))
         context = {
             'form':form
         }
@@ -682,7 +683,10 @@ class DisplayProject(LoginRequiredMixin, ListView):
 
             with zipfile.ZipFile(file_zip, 'w') as zf:
                 for i in project:
-                    poster_data = default_storage.open(i.poster.name, 'rb').read()
+                    try:
+                        poster_data = default_storage.open(i.poster.name, 'rb').read()
+                    except PermissionError:
+                        continue
                     zf.writestr(i.user.username + '.jpg', poster_data)
 
             file_zip.seek(0)
@@ -775,7 +779,10 @@ class DisplayProposal(LoginRequiredMixin, ListView):
                         user_count[user_key] += 1
                     else:
                         user_count[user_key] = 1
-                    image_data = default_storage.open(i.cancelapplication.name, 'rb').read()
+                    try:
+                        image_data = default_storage.open(i.cancelapplication.name, 'rb').read()
+                    except PermissionError:
+                        continue
                     filename = user_key + '-' + str(user_count[user_key]) + '.jpg'
                     zf.writestr(filename, image_data)
 
@@ -977,6 +984,8 @@ class ModifyStudentInfo(LoginRequiredMixin, UpdateView):
                 student.username = getValue['username']
             if not check_password(getValue['password'], student.password) and getValue['password'] != "":
                 student.password = make_password(getValue['password'])
+            if getValue['enrollYear'] != '':
+                student.enrollYear = int(getValue['enrollYear']) + 1911
             student.identity = getValue['identity']
             student.save()
 
@@ -1225,6 +1234,105 @@ class HistoryBookingAnalysis(LoginRequiredMixin, View):
                 'paper': paper
             }
             return render(request, 'HistoryBookingAnalysis.html', context)
+        
+class HistoryPaperUpdate(LoginRequiredMixin, View):
+    def get(self, request):
+        return render(request, 'HistoryPaperUpdate.html')
+    def post(self, request):
+        if "multi" in request.POST:
+            try:
+                if request.FILES['myfile']:
+                    myfile = request.FILES['myfile']  
+                    fs = FileSystemStorage()
+                    filename = fs.save(myfile.name, myfile)
+                    uploaded_file_url = fs.url(filename) 
+                    exceldata = pd.read_csv("."+uploaded_file_url,encoding='utf-8')
+                    dbframe = exceldata
+
+                    for dbframe in dbframe.itertuples():
+                        try:
+                            user = User.objects.get(username=dbframe.username)
+                        except User.DoesNotExist:
+                            if dbframe.username[0] == 'U':
+                                id = 0
+                            elif dbframe.username[0] == 'G':
+                                id = 2
+                            elif dbframe.username[0] == 'M':
+                                id = 3
+                            user = User.objects.create(username = dbframe.username, password = make_password(dbframe.username), name=dbframe.name, enrollYear = int(dbframe.enrollYear) + 1911, email = dbframe.username + "@go.utaipei.edu.tw", department = 0, identity = id)
+                            user.save()
+
+                        if user.identity != 0:
+                            myState = 1
+                        else:
+                            myState = 0
+
+                        try:
+                            project = Project.objects.get(user = user)
+                        except Project.DoesNotExist:
+                            project = Project.objects.create(user = user, name = dbframe.paperName, professor = dbframe.professor, field = 0, state = myState)
+                            project.save()
+
+                        if user.identity == 0:
+                            title = user.enrollYear - 1911 + 3
+                        elif user.identity == 2 or user.identity == 3:
+                            title = user.enrollYear - 1911 + 1
+                        try:
+                            paper = Paper.objects.get(project = project)
+                        except Paper.DoesNotExist:
+                            paper = Paper.objects.create(project = project, barCode = str(title) + '-' + user.username)
+                            paper.save()
+
+                    messages.success(request, "上傳成功!")
+                    return render(request, 'HistoryPaperUpdate.html', {
+                        'uploaded_file_url': uploaded_file_url
+                    })
+            except Exception as identifier:            
+                print(identifier)
+
+        elif "single" in request.POST:
+            getValue = self.request.POST
+
+            if getValue['enrollYear'] == '':
+                return render(request, 'HistoryPaperUpdate.html')
+
+            try:
+                user = User.objects.get(username = getValue['username'])
+            except User.DoesNotExist:
+                if getValue['username'][0] == 'U':
+                    id = 0
+                elif getValue['username'][0] == 'G':
+                    id = 2
+                elif getValue['username'][0] == 'M':
+                    id = 3
+                user = User.objects.create(username = getValue['username'], password = make_password(getValue['username']), name=getValue['name'], enrollYear = int(getValue['enrollYear']) + 1911, email = getValue['username'] + "@go.utaipei.edu.tw", department = 0, identity = id)
+                user.save()
+
+            if user.identity != 0:
+                myState = 1
+            else:
+                myState = 0
+            try:
+                project = Project.objects.get(user = user)
+            except Project.DoesNotExist:    
+                project = Project.objects.create(user = user, name = getValue['paperName'], professor = getValue['professor'], field = 0, state = myState)
+                project.save()
+
+            if user.identity == 0:
+                title = user.enrollYear - 1911 + 3
+            elif user.identity == 2 or user.identity == 3:
+                title = user.enrollYear - 1911 + 1
+
+            try:
+                paper = Paper.objects.get(project = project)
+            except Paper.DoesNotExist:
+                paper = Paper.objects.create(project = project, barCode = str(title) + '-' + user.username)
+                paper.save()
+
+            messages.success(request, "上傳成功!")
+                
+        return render(request, 'HistoryPaperUpdate.html')
+
 
 class AuditLicense(LoginRequiredMixin, UpdateView):
     model = License

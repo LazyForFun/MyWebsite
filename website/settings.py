@@ -123,14 +123,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
-STATIC_URL = 'license-pass/static/'
-STATIC_ROOT = os.path.join(os.path.dirname(__file__),'static')
-
-STATICFILES_DIRS=[os.path.join(BASE_DIR,"statics")]
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR,'static')
 
 
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/'
+
+LOGIN_URL = 'student.views.LoginView'
+LOGIN_REDIRECT_URL = '/License-pass'
+LOGOUT_REDIRECT_URL = '/License-pass'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
@@ -143,3 +143,5 @@ EMAIL_PORT = 587  #TLS通訊埠號
 EMAIL_USE_TLS = True  #開啟TLS(傳輸層安全性)
 EMAIL_HOST_USER = 'ling900101@gmail.com'  #寄件者電子郵件
 EMAIL_HOST_PASSWORD = 'alytntbqjmmaqxfd'  #Gmail應用程式的密碼
+
+#FORCE_SCRIPT_NAME = 'License-pass/'
