@@ -12,13 +12,13 @@
         </p>
     </div>
     <div class="container"  align="center" style="display: flex;">
+        {% if not user or not user.is_authenticated %}
         <div style="flex: 1;">
-            <a href="{% url 'ReturnEntityPaper' %}" class="btn btn-primary" style="font-size: xx-large;">歸還報告書</a>
+            <a href="{% url 'login' %}" class="btn btn-primary" style="font-size: xx-large;">登入</a>
         </div>
         <div style="flex: 1;">
-            {% if not user or not user.is_authenticated %}
-                <a href="{% url 'login' %}" class="btn btn-primary" style="font-size: xx-large;">登入</a>
-            {% endif %}
+            <a href="{% url 'ReturnEntityPaper' %}" class="btn btn-primary" style="font-size: xx-large;">歸還專題報告書/論文</a>
         </div>
+        {% endif %}
     </div>
 {% endblock %}

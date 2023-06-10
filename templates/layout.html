@@ -22,27 +22,29 @@
             <ul class="navbar-nav mr-auto">
                 {% if user and user.is_authenticated %}
                     {% if user.department == 0 %}
-                        {% if user.identity == 1 %}
+                        {% if user.identity == 1 or user.identity == 4 %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     資料總覽
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="{% url 'DisplayLicense' %}">證照總覽</a>
-                                    <a class="dropdown-item" href="{% url 'DisplayProject' %}">專題總覽</a>
+                                    <a class="dropdown-item" href="{% url 'DisplayProject' %}">專題報告書總覽</a>
                                     <a class="dropdown-item" href="{% url 'DisplayProposal' %}">計畫發表總覽</a>
                                     <a class="dropdown-item" href="{% url 'DisplayFinal' %}">學位考試總覽</a>
                                 </div>
                             </li>
-                            <li class="nav-item dropdown">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                    學生相關
-                                </a>
-                                <div class="dropdown-menu" aria-labelledby="navbarDropdown">
-                                    <a class="dropdown-item" href="{% url 'ImportAndExport' %}">新增學生</a>
-                                    <a class="dropdown-item" href="{% url 'SearchStudent' %}">修改學生資料</a>
-                                </div>
-                            </li>
+                            {% if user.identity == 1 %}
+                                <li class="nav-item dropdown">
+                                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                        學生相關
+                                    </a>
+                                    <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                                        <a class="dropdown-item" href="{% url 'ImportAndExport' %}">新增學生</a>
+                                        <a class="dropdown-item" href="{% url 'SearchStudent' %}">修改學生資料</a>
+                                    </div>
+                                </li>
+                            {% endif %}
                             <li class="nav-item dropdown">
                                 <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                     借閱相關

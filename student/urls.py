@@ -40,6 +40,8 @@ urlpatterns = [
     path('DisplayProject', views.DisplayProject.as_view(), name='DisplayProject'),#報告書瀏覽
     path('DisplayProposal', views.DisplayProposal.as_view(), name='DisplayProposal'),#計畫發表瀏覽
     path('DisplayFinal', views.DisplayFinal.as_view(), name='DisplayFinal'),#學位考試瀏覽
+    path('EditStudentDoc/<int:pk>', views.EditStudentDoc.as_view(), name='EditStudentDoc'),
+    path('ChangeStudentDocState/<int:pk>/<int:choice>', views.EditStudentDoc.ChangeStudentDocState, name='ChangeStudentDocState'),
     path('AuditLicense/<int:pk>', views.AuditLicense.as_view(), name='AuditLicense'),#審核
     path('SearchStudent', views.SearchStudent.as_view(), name='SearchStudent'),#尋找特定學生
     path('ModifyStudentInfo/<int:pk>', views.ModifyStudentInfo.as_view(), name='ModifyStudentInfo'),#修改學生資料
@@ -66,6 +68,5 @@ urlpatterns = [
     path('BorrowPaper/<int:pk>', views.BorrowPaper.as_view(), name='BorrowPaper'),#報告書列表
     path('MakeBooking/<int:pk>', views.BorrowPaper.MakeBooking, name='MakeBooking'),#借用表單
     path('UserBooking/<int:pk>', views.UserBooking.as_view(), name='UserBooking'),#已預約清單
-    path('DeleteBooking/<int:pk>', views.UserBooking.deleteBooking, name='DeleteBooking'),#刪除預約
-   
-]+static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)+static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+    path('DeleteBooking/<int:pk>', views.UserBooking.deleteBooking, name='DeleteBooking'),#刪除預約  
+]

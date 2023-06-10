@@ -1,0 +1,53 @@
+{% extends "layout.html" %}
+{% block title %} {{ doc.user.name }} 的碩士畢業門檻總覽{% endblock %}
+
+{% block content %}
+
+    <div class="container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th scope="col">考試合格證明</th>
+                    <th scope="col">碩士學位論文評分表(三份)</th>
+                    <th scope="col">碩士論文發表會綜合評審結果</th>
+                    <th scope="col">論文修正確認書</th>
+                </tr>
+            </thead>
+            <tbody>
+                    <tr>
+                        <td>
+                            {% if doc.qualifiedId %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=0 %}" class="btn btn-primary">已繳交</a>
+                            {% else %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=0 %}" class="btn btn-danger">未繳交</a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.evaluationForm %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=1 %}" class="btn btn-primary">已繳交</a>
+                            {% else %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=1 %}" class="btn btn-danger">未繳交</a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.assesmentResult %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=2 %}" class="btn btn-primary">已繳交</a>
+                            {% else %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=2 %}" class="btn btn-danger">未繳交</a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if doc.confirmation %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=3 %}" class="btn btn-primary">已繳交</a>
+                            {% else %}
+                                <a href="{%url 'ChangeStudentDocState' pk=doc.id choice=3 %}" class="btn btn-danger">未繳交</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+            </tbody>
+        </table><br>
+        <div align="right">
+            <a href="{% url 'DisplayFinal' %}" class="btn btn-outline-primary">返回</a>
+        </div>
+    </div>
+{% endblock %}

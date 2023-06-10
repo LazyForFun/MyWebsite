@@ -27,9 +27,10 @@
                     <th scope="col">學制</th>
                     <th scope="col">指導教授</th>
                     <th scope="col">入學年</th>
-                    <th scope="col">Final題目</th>
+                    <th scope="col">學位考試題目</th>
                     <th scope="col">狀態</th>
                     <th scope="col">取消申請表</th>
+                    <th scope="col">資料繳交</th>
                 </tr>
             </thead>
             <tbody>
@@ -43,10 +44,12 @@
                         <td>{{ project.name }}</td>
                         {% if project.state == 1 %}
                             <td><button class="btn btn-primary">{{ project.get_state_display }}</button></td>
+                            <td></td>
                         {% elif project.state == 2 %}
                             <td><button class="btn btn-danger">{{ project.get_state_display }}</button></td>
                             <td><a href="{{ project.cancelapplication.url }}" target="_blank" class="btn btn-warning">下載</a></td>
                         {% endif %}
+                        <td><a href="{% url 'EditStudentDoc' pk=project.user.id %}" class="btn btn-primary">編輯</a></td>
                     </tr>
                 {% endfor %}
             </tbody>

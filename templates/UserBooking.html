@@ -7,11 +7,11 @@
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">報告書名稱</th>
-                <th scope="col">條碼</th>
                 <th scope="col">作者</th>
+                <th scope="col">專題報告書/論文名稱</th>
+                <th scope="col">條碼</th>
                 <th scope="col">指導教授</th>
-                <th scope="col">類型</th>
+                <th scope="col">領域</th>
                 <th scope="col">預約日期</th>
                 <th scope="col">預約狀況</th>
                 <th scope="col">取消預約</th>
@@ -20,18 +20,18 @@
         <tbody>
             {% for booking in booking %}
                 <tr>
+                    <td>{{ booking.paper.project.user.name }}</td>
                     <td>{{ booking.paper.project.name }}</td>
                     <td>{{ booking.paper.barCode }}</td>
-                    <td>{{ booking.user.name }}</td>
                     <td>{{ booking.paper.project.professor }}</td>
-                    <td>{{ booking.paper.project.get_type_display }}</td>
+                    <td>{{ booking.paper.project.get_field_display }}</td>
                     <td>{{ booking.bookingDate | date:'Y-m-d H:i' }}</td>
                     {% if booking.state == 0 %}
-                        <td><button class="btn btn-outline-primary">{{ booking.get_state_display }}</button></td>
+                        <td><button class="btn btn-outline-primary" disabled>{{ booking.get_state_display }}</button></td>
                     {% elif booking.state == 1 %}
-                        <td><button class="btn btn-warning">{{ booking.get_state_display }}</button></td>
+                        <td><button class="btn btn-warning" disabled>{{ booking.get_state_display }}</button></td>
                     {% else %}
-                        <td><button class="btn btn-primary">{{ booking.get_state_display }}</button></td>
+                        <td><button class="btn btn-primary" disabled>{{ booking.get_state_display }}</button></td>
                     {% endif %}
                     {% if booking.state == 0 %}
                         <td><a href="{% url 'DeleteBooking' pk=booking.id %}" class="btn btn-danger">取消</a></td>

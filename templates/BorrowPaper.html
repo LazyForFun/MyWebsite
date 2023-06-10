@@ -6,7 +6,6 @@
     {% csrf_token %}
     作者:<input type = "search" name = "author" placeholder = "" style="width: 100px;">
     專題報告書/論文名稱:<input type = "search" name = "name" placeholder = "">
-    指導教授:<input type = "search" name = "professor" placeholder = "" style="width: 100px;">
     學制:
     <select class = "select" name = "type">
         <option value = -1></option>
@@ -14,6 +13,7 @@
         <option value = 2 {% if type == 1 %} selected="selected" {% endif %}>日間碩士班</option>
         <option value = 3 {% if type == 2 %} selected="selected" {% endif %}>碩士在職專班</option>
     </select> 
+    指導教授:<input type = "search" name = "professor" placeholder = "" style="width: 100px;">
     領域:
     <select type="Select" name="field">
         <option value = -1></option>
@@ -32,7 +32,7 @@
                     <th scope="col">作者</th>
                     <th scope="col">專題報告書/論文名稱</th>
                     <th scope="col">學制</th>
-                    <th scope="col">編碼</th>
+                    <th scope="col">條碼</th>
                     <th scope="col">指導教授</th>
                     <th scope="col">領域</th>
                     <th scope="col">預約</th>

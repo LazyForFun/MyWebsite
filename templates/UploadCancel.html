@@ -4,7 +4,7 @@
 {% block content %}
 <br><br><br><br><br><br><br>
     <div class="container;center" align="center" style="font-size: larger;">
-        <form method="POST" action="">
+        <form method="POST" action="" enctype="multipart/form-data">
         {% csrf_token %}
             上傳取消申請表掃描檔：<br><br><br><br>
             <input type="file" class="form-control" style="width: 400px" name="cancelApplication"><br>

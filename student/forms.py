@@ -1,5 +1,5 @@
 from django import forms
-from .models import Proposal, Paper, License, User, Booking, Project
+from .models import Proposal, License, User, Project, StudentDoc
 
 class UserRegistration(forms.ModelForm):
     class Meta:
@@ -7,6 +7,18 @@ class UserRegistration(forms.ModelForm):
         fields = ['username', 'password', 'name']
 
 class ProjectModelForm(forms.ModelForm):
+
+    PROFESSOR = (('蔡俊明', '蔡俊明'),
+                 ('陳彥宏', '陳彥宏'),
+                 ('洪瑞鍾', '洪瑞鍾'),
+                 ('壽大衛', '壽大衛'),
+                 ('黃志鵬', '黃志鵬'),
+                 ('盧東華', '盧東華'),
+                 ('楊政穎', '楊政穎'),
+                 ('梁世聰', '梁世聰'),
+                 ('賴阿福', '賴阿福'),)
+    
+    professor = forms.ChoiceField(choices=PROFESSOR, widget=forms.Select(attrs={'class': 'form-control'}), label='指導教授')
 
     class Meta:
         model = Project
@@ -16,7 +28,7 @@ class ProjectModelForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'report': forms.FileInput(attrs={'class': 'form-control'}),
             'poster': forms.FileInput(attrs={'class': 'form-control'}),
-            'professor': forms.TextInput(attrs={'class': 'form-control'}),
+            'professor': forms.Select(attrs={'class': 'form-control'}),
             'field': forms.Select(attrs={'class':'form-control'}),
         }
         labels = {
@@ -45,10 +57,22 @@ class LicenseModelForm(forms.ModelForm):
             'level': '證照級別',
             'acqDate': '取得日期',
             'organizer': '主辦單位',
-            'image': '證明截圖',
+            'image': '證明截圖(請上傳圖檔:jpg,png等)',
         }
 
 class ProposalModelForm(forms.ModelForm):
+
+    PROFESSOR = (('蔡俊明', '蔡俊明'),
+                 ('陳彥宏', '陳彥宏'),
+                 ('洪瑞鍾', '洪瑞鍾'),
+                 ('壽大衛', '壽大衛'),
+                 ('黃志鵬', '黃志鵬'),
+                 ('盧東華', '盧東華'),
+                 ('楊政穎', '楊政穎'),
+                 ('梁世聰', '梁世聰'),
+                 ('賴阿福', '賴阿福'),)
+    
+    professor = forms.ChoiceField(choices=PROFESSOR, widget=forms.Select(attrs={'class': 'form-control'}), label='指導教授')
     
     class Meta:
         model = Proposal

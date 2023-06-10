@@ -39,7 +39,7 @@ from itertools import chain
 
 
 from .forms import ProjectModelForm, LicenseModelForm, ProposalModelForm, LicenseEditForm, LicenseAuditForm, FinalModelForm, ProposalEditForm, FinalEditForm
-from .models import User, Project,License, Proposal, Booking, Paper, Year
+from .models import User, Project,License, Proposal, Booking, Paper, Year, StudentDoc
 from . import forms
 #csshare.tw@gmail.com
 #cs@go.utaipei.edu.tw
@@ -47,7 +47,8 @@ from . import forms
 # Create your views here.
 
 limit = 10 #分頁器單個頁面的資料數
-pattern = r'^(U\d{8}|G\d{8}|M\d{8}|csshare[0-9]+)$' #可使用的帳號格式
+pattern_student = r'^(U\d{8}|G\d{8}|M\d{8}|u\d{8}|g\d{8}|m\d{8})$' #學生可使用的帳號格式
+pattern_cs = r'^(csshare[0-9]+)$' #管理者可使用的帳號格式
 
 class Home(View):
 
@@ -60,6 +61,10 @@ class Signin(View):
     
     def post(self, request):
         getValue = self.request.POST
+
+        if getValue['password'] != getValue['passwordCheck']:
+            messages.success(request, "兩次密碼不一致!!!")
+            return redirect(reverse('Signin'))
         try:
             checkUser = User.objects.get(username = getValue['username'])
         except User.DoesNotExist:
@@ -68,10 +73,15 @@ class Signin(View):
             messages.info(request, "使用者已存在!!")
             return redirect(reverse('Signin'))
         else:
-            new_username = getValue['username'].upper()
-            if re.match(pattern, new_username):
+            new_username = getValue['username']
+            if re.match(pattern_cs, new_username):
+                user = User.objects.create(name = getValue['name'], username = new_username, password = make_password(getValue['password']), email = 'csshare.tw@gmail.com', enrollYear = timezone.now().year, identity = 4, department = 0)
+                messages.success(request, "註冊成功!!")
+                return redirect(reverse('login'))
+            elif re.match(pattern_student, new_username):
                 new_department = -1
                 new_identity = -1
+                new_username = new_username.upper()
                 if new_username[0] == 'U':
                     new_identity = 0
                 elif new_username[0] == 'G':
@@ -83,7 +93,7 @@ class Signin(View):
                     new_department = 0
                 else:
                     new_department = 1
-                user = User.objects.create(name = getValue['name'], username = new_username, password = make_password(getValue['password']), email = getValue['mail'], enrollYear = int(new_username[1:4]) + 1911, identity = new_identity, department = new_department)
+                user = User.objects.create(name = getValue['name'], username = new_username, password = make_password(getValue['password']), email = new_username + '@go.utaipei.edu.tw', enrollYear = int(new_username[1:4]) + 1911, identity = new_identity, department = new_department)
                 user.save()
                 messages.success(request, "註冊成功!!")
                 return redirect(reverse('login'))
@@ -97,22 +107,36 @@ class EditPassword(LoginRequiredMixin, View):
     
     def post(self, request, pk):
         getValue = self.request.POST
-        if check_password(getValue['password'], request.user.password):
-            if getValue['password'] != getValue['newpassword']:
-                if getValue['newpassword'] == getValue['newpassword_check']:
-                    self.request.user.password = make_password(getValue['newpassword'])
-                    self.request.user.save()
-                    messages.success(request, "更改成功!")
-                    return redirect(reverse('Home'))
-                else:
-                    messages.success(request, "密碼確認有誤...")
 
+        if 'editPassword' in getValue:
+            if check_password(getValue['password'], request.user.password):
+                if getValue['password'] != getValue['newpassword']:
+                    if getValue['newpassword'] == getValue['newpassword_check']:
+                        self.request.user.password = make_password(getValue['newpassword'])
+                        self.request.user.save()
+                        messages.success(request, "更改成功!! 請重新登入!!")
+                    else:
+                        messages.success(request, "密碼確認有誤...")
+
+                else:
+                    messages.success(request, "新舊密碼不能相同")
             else:
-                messages.success(request, "新舊密碼不能相同")
-        else:
-            messages.success(request, '舊密碼不正確...')
+                messages.success(request, '舊密碼不正確...')
+
+        elif 'editInfo' in getValue:
+            user = request.user
+            if getValue['name'] != '':
+                user.name = getValue['name']
+            if getValue['username'] != '':
+                user.username = getValue['username']
+            if getValue['email'] != '':
+                user.email = getValue['email']
+
+            user.save()
+            messages.success(request, "更改成功!! 請重新登入")
         
-        return redirect(reverse('EditPassword', kwargs={'pk':pk}))
+        auth.logout(request)
+        return redirect(reverse('login'))
     
 class ForgetPassword(View):
     def get(self, request):
@@ -127,10 +151,10 @@ class ForgetPassword(View):
 
         if user:
             newpassword = get_random_string(length=8)
-            #send_mail('資科系務系統新密碼', '你的新密碼是' + newpassword, 'ling900101@gmail.com', [user.email,], fail_silently=False)
+            send_mail('資科系務系統新密碼', '你的新密碼是' + newpassword, 'csshare.go@gmail.com', [user.email,], fail_silently=False)
             user.password = make_password(newpassword)
             user.save()
-            messages.success(request, "重設成功，請至信箱確認新密碼!")
+            messages.success(request, "重設成功，請至學校信箱確認新密碼!")
         else:
             messages.success(request, "輸入的資料有誤")
 
@@ -145,8 +169,8 @@ class LoginView(View):
         if request.user.is_authenticated:
             return redirect(reverse('Home'))
 
-        username = request.POST.get('username', '')
-        password = request.POST.get('password', '')
+        username = request.POST['username']
+        password = request.POST['password']
         user = auth.authenticate(username=username, password=password)
 
         if user.is_active is True:
@@ -202,16 +226,21 @@ class UploadCancel(View):
         if pk == 'proposal':
             proposal = Proposal.objects.get(user = request.user.id, state = 0)
             proposal.state = 1
-            proposal.cancelapplication = self.request.POST['cancelApplication']
+            myfile = request.FILES['cancelApplication']
+            proposal.cancelapplication = myfile
             proposal.save()
         
         elif pk == 'final':
             project = Project.objects.get(user = request.user.id, state = 1)
             project.state = 2
-            project.cancelapplication = self.request.POST['cancelApplication']
+            myfile = request.FILES['cancelApplication']
+            project.cancelapplication = myfile
             paper = Paper.objects.get(project = project)
             paper.delete()
             project.save()
+
+            doc = StudentDoc.objects.get(user = request.user.id)
+            doc.delete()
 
         return redirect(reverse('UserProposalAndFinal', kwargs={'pk': self.request.user.id}))
 
@@ -234,6 +263,10 @@ class PassProject(LoginRequiredMixin, CreateView):
     
     def post(self, request, pk):
         form = ProjectModelForm(request.POST, request.FILES)
+        myFile =  request.FILES['report']
+        if myFile.content_type != 'application/pdf':
+            messages.success(request, "請上傳pdf檔!!!")
+            return render(request, 'PassProject.html', context={'form': form})
         if form.is_valid():
             form.save()
             data = Project.objects.get(user=self.kwargs['pk'])
@@ -350,6 +383,9 @@ class PassFinal(LoginRequiredMixin, View):
                 paper = Paper.objects.create(project = data, barCode = barCode)
                 paper.save()
 
+                doc = StudentDoc.objects.create(user = user)
+                doc.save()
+
                 messages.success(request, "繳交成功!!")
                 return redirect(reverse('UserProposalAndFinal', kwargs={'pk':pk}))
             else:
@@ -406,7 +442,10 @@ class BorrowPaper(ListView):
             findBookingExist = None
         
         if findBookingExist:
-            messages.success(request, "有人借走 " +  paper.project.name + " 囉!!")
+            if findBookingExist.user == request.user:
+                messages.success(request, "你已經借走這份報告書/論文囉!!!")
+            else:
+                messages.success(request, "有人借走 " +  paper.project.name + " 囉!!!")
         else:
             try:
                 year = Year.objects.get(year = (int(timezone.now().year) - 1911))
@@ -418,7 +457,7 @@ class BorrowPaper(ListView):
                 year.save()
             booking = Booking.objects.create(user=request.user, paper = paper, bookingDate = timezone.now(), year = year)
             messages.success(request, "預約成功，請至資訊科學系辦公室借用!!!")
-            #send_mail('新的報告書預約', request.user.name + "在" + booking.bookingTime + "預約了 " + booking.paper.name, 'ling900101@gmail.com', ['csshare'], fail_silently=False)
+            send_mail('新的報告書預約', request.user.name + "在" + booking.bookingTime + "預約了 " + booking.paper.name, 'csshare.go@gmail.com', ['csshare.tw@gmail.com'], fail_silently=False)
             booking.save()
             
 
@@ -505,7 +544,7 @@ class UserBooking(ListView):
     
     def deleteBooking(request, pk):
         booking = Booking.objects.get(id = pk)
-        #send_mail('報告書預約取消', booking.paper.name + "的預約已取消!!", 'ling900101@gmail.com', [request.user.email,], fail_silently=False)
+        send_mail('報告書預約取消', booking.paper.name + "的預約已取消!!", 'csshare.go@gmail.com', [request.user.email,], fail_silently=False)
         booking.delete()
         messages.success(request, "預約已取消!")
 
@@ -885,6 +924,33 @@ class DisplayFinal(LoginRequiredMixin, ListView):
             response['Content-Disposition'] = 'attachment; filename="學位考試取消表.zip"'
             response.write(file_zip.read())
             return response
+        
+class EditStudentDoc(LoginRequiredMixin, ListView):
+
+    def get(self, request, pk):
+        doc = StudentDoc.objects.get(user = pk)
+        context = {
+            'doc':doc,
+        }
+        return render(request, 'EditStudentDoc.html', context)
+    
+    def ChangeStudentDocState(request, pk, choice):
+        doc = StudentDoc.objects.get(id = pk)
+
+        if choice == 0:
+            doc.qualifiedId = not doc.qualifiedId
+        if choice == 1:
+            doc.evaluationForm = not doc.evaluationForm
+        if choice == 2:
+            doc.assesmentResult = not doc.assesmentResult
+        if choice == 3:
+            doc.confirmation = not doc.confirmation
+
+        doc.save()
+
+        return redirect(reverse('EditStudentDoc', kwargs={'pk':doc.user.id}))
+        
+    
         
 class ImportAndExport(LoginRequiredMixin, View):
     
@@ -1270,7 +1336,7 @@ class HistoryPaperUpdate(LoginRequiredMixin, View):
                         try:
                             project = Project.objects.get(user = user)
                         except Project.DoesNotExist:
-                            project = Project.objects.create(user = user, name = dbframe.paperName, professor = dbframe.professor, field = 0, state = myState)
+                            project = Project.objects.create(user = user, name = dbframe.paperName, professor = dbframe.professor, field = dbframe.field, state = myState)
                             project.save()
 
                         if user.identity == 0:
@@ -1366,6 +1432,7 @@ class EditLicense(LoginRequiredMixin, UpdateView):
     template_name = 'EditLicense.html'
 
     def get_success_url(self):
+        messages.success(self.request, "編輯成功")
         return reverse('UserLicense', kwargs={'pk':self.request.user.id})
 
 class EditProject(LoginRequiredMixin, UpdateView):

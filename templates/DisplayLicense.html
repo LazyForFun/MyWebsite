@@ -51,7 +51,9 @@
                         {% elif license.pazz == 2 %}
                             <td><button class="btn btn-danger">{{ license.get_pazz_display }}</button></td>
                         {% endif %}
-                        <td><a href="{% url 'AuditLicense' pk=license.id %}"class="btn btn-primary">檢視</a></td>
+                        {% if user.identity == 1 %}
+                            <td><a href="{% url 'AuditLicense' pk=license.id %}"class="btn btn-primary">檢視</a></td>
+                        {% endif %}
                     </tr>
                 {% endfor %}
             </tbody>

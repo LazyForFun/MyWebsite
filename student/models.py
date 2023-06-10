@@ -24,7 +24,8 @@ class User(AbstractUser):
     IDENTITY=((0, '大學部'),
               (1, '管理員'),
               (2, '日間碩士班'),
-              (3, '碩士在職專班'))
+              (3, '碩士在職專班'),
+              (4, '系辦工讀生'))
     identity = models.IntegerField(choices=IDENTITY, default=0)
     enrollYear = models.DecimalField(max_digits = 4, decimal_places = 0, default = timezone.now().year)#入學年
 
@@ -73,7 +74,7 @@ class Proposal(models.Model):
     STATE = ((0, '已申請'),
              (1, '已取消'),)
     state = models.IntegerField(choices=STATE, default = 0)
-    cancelapplication = models.FileField(upload_to='CancelProposal/', blank=True, null=True, default=None)
+    cancelapplication = models.FileField(upload_to="CancelProposal/", blank=True, null=True, default=None)
     
     def __str__(self):
         return self.name
@@ -158,3 +159,14 @@ class Booking(models.Model):
     
     class Meta:
         ordering = ['state', '-id']
+
+class StudentDoc(models.Model):
+    qualifiedId = models.BooleanField(default=False)   #考試合格證明
+    evaluationForm = models.BooleanField(default=False)  #碩士學位論文評分表
+    assesmentResult = models.BooleanField(default=False)  #碩士論文發表會綜合評審結果
+    confirmation = models.BooleanField(default=False)  #論文修正確認書
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.user.name
