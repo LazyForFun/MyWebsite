@@ -15,10 +15,13 @@
         <option value = '1' {% if level == '1' %} selected="selected" {% endif %}>網路及多媒體應用</option>
         <option value = '2' {% if level == '2' %} selected="selected" {% endif %}>系統及演算法開發</option>
     </select>
+    <br><br>
     <input type="submit" class="btn btn-primary" name = "search" value="查詢" />
     <input type="submit" class="btn btn-primary" name = "export" value="匯出" />
+    <input type="submit" class="btn btn-primary" name="download_selected" value="下載選擇的海報" />
     <input type="submit" class="btn btn-primary" name = "download" value="全部下載" />
 </form>
+<br>
     <div class="container">
         <table class="table">
             <thead>
@@ -48,6 +51,7 @@
                         {% if project.poster %}
                             <td><a href="{{ project.poster.url }}" target="_blank">海報下載</a></td>
                         {% endif %}
+
                     </tr>
                 {% endfor %}
             </tbody>

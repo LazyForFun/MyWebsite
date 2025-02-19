@@ -108,6 +108,7 @@ class Project(models.Model):
              (2, '已取消'),)
     state = models.IntegerField(choices=STATE, default = 0)
     cancelapplication = models.FileField(upload_to='CancelFinal/', blank=True, null=True, default=None)
+    selected = models.BooleanField(default=False)
 
     class Meta:
         ordering = ["user"]

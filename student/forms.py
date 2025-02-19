@@ -88,9 +88,6 @@ class ProposalModelForm(forms.ModelForm):
             'professor':'指導教授',
             'postDate':'計畫發表日期',
         }
-        placeholder = {
-            'postDate':'YYYY-MM-DD',
-        }
     
 class FinalModelForm(forms.ModelForm):
 

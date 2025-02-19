@@ -251,6 +251,7 @@ class PassProject(LoginRequiredMixin, CreateView):
             data = Project.objects.get(user=self.kwargs['pk'], state = 0)
         except Project.DoesNotExist:
             data = None
+        print(data)
         if data:
             messages.success(request, "請勿重複繳交")
             return render(request, 'Home.html')
@@ -733,6 +734,8 @@ class DisplayProject(LoginRequiredMixin, ListView):
             response['Content-Disposition'] = 'attachment; filename="專題海報.zip"'
             response.write(file_zip.read())
             return response
+        elif 'download_selected' in getValue:
+            return render(request, 'DisplayProject.html', context)
 
 class DisplayProposal(LoginRequiredMixin, ListView):
         
